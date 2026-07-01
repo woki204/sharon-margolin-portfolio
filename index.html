@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sharon Margolin — Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Heebo',sans-serif;direction:rtl;background:#ece6de;color:#1a1a1a;min-height:100vh}
+a{text-decoration:none;color:inherit}
+html{scroll-behavior:smooth}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#c8bdb4;border-radius:4px}
+
+/* ── HEADER ── */
+#site-header{position:sticky;top:0;z-index:200;background:#1a1a1a;height:60px;padding:0 36px;display:flex;align-items:center;gap:20px}
+.hdr-logo{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:900;letter-spacing:3.5px;color:#fff;border-bottom:1.5px solid #8b1a1a;padding-bottom:4px;white-space:nowrap;flex-shrink:0}
+.hdr-pill{border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:3px 11px;font-size:.6rem;letter-spacing:2px;color:rgba(255,255,255,.5);white-space:nowrap;flex-shrink:0}
+.hdr-spacer{flex:1}
+.hdr-search{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:7px 14px;width:320px;flex-shrink:0}
+.hdr-search-icon{color:rgba(255,255,255,.3);font-size:.9rem;flex-shrink:0}
+#searchIn{flex:1;background:none;border:none;outline:none;color:#fff;font-family:'Heebo',sans-serif;font-size:.84rem;direction:rtl;min-width:0}
+#searchIn::placeholder{color:rgba(255,255,255,.35)}
+.hdr-admin{border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:7px 14px;background:none;color:rgba(255,255,255,.7);font-family:'Heebo',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.hdr-admin:hover{background:rgba(255,255,255,.1);color:#fff}
+.hdr-mobile-filter{display:none;border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:7px 12px;background:none;color:rgba(255,255,255,.7);font-family:'Heebo',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0}
+
+/* ── MAIN LAYOUT ── */
+#main-wrap{max-width:1400px;margin:0 auto;padding:24px 24px;display:flex;direction:rtl;gap:20px;align-items:flex-start}
+
+/* ── SIDEBAR ── */
+#filter-sidebar{width:260px;flex-shrink:0;position:sticky;top:80px;max-height:calc(100vh - 100px);overflow-y:auto;border-radius:12px}
+#filter-sidebar::-webkit-scrollbar{width:3px}
+#filter-sidebar::-webkit-scrollbar-thumb{background:#d4ccc4;border-radius:3px}
+.sb-counter{background:#8b1a1a;border-radius:12px 12px 0 0;padding:14px 18px}
+.sb-counter-num{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;color:#fff;line-height:1}
+.sb-counter-label{font-size:.72rem;color:rgba(255,255,255,.65);margin-top:3px}
+.sb-section{background:#fff;padding:14px 18px;border-bottom:1px solid #ede8e2}
+.sb-section:last-child{border-radius:0 0 12px 12px;border-bottom:none}
+.sb-sec-title{font-size:.72rem;font-weight:800;letter-spacing:1.5px;color:#1a1a1a;text-transform:uppercase;border-bottom:1.5px solid #8b1a1a;padding-bottom:8px;margin-bottom:12px}
+.sb-row{display:flex;align-items:center;gap:9px;padding:4px 0;cursor:pointer;font-size:.8rem;color:#2a2a2a;user-select:none;line-height:1.3}
+.sb-row:hover{color:#8b1a1a}
+.sb-row input[type="checkbox"],.sb-row input[type="radio"]{width:15px;height:15px;accent-color:#8b1a1a;cursor:pointer;flex-shrink:0;margin:0}
+.sb-row-label{flex:1}
+.sb-cnt{font-size:.74rem;color:#9b9590;font-weight:600;flex-shrink:0}
+.sb-row:has(input:checked) .sb-cnt{color:#8b1a1a}
+.sb-row:has(input:checked) .sb-row-label{font-weight:700;color:#8b1a1a}
+.sb-tags{display:flex;flex-wrap:wrap;gap:6px;padding-top:2px}
+.sb-tag{padding:3px 9px;border-radius:3px;border:1px solid #d4ccc4;background:#fafaf8;color:#5c5450;font-size:.68rem;font-weight:600;cursor:pointer;transition:all .15s;font-family:'Heebo',sans-serif;line-height:1.5}
+.sb-tag:hover,.sb-tag.active{background:#8b1a1a;color:#fff;border-color:#8b1a1a}
+
+/* ── MAIN CONTENT ── */
+#main-content{flex:1;min-width:0}
+.main-top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.main-title{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:800;color:#1a1a1a}
+.main-title-count{color:#8b1a1a}
+.clear-btn{background:none;color:#8b1a1a;border:1.5px solid #f0c0c0;border-radius:20px;padding:4px 13px;font-size:.72rem;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;transition:all .15s;display:none}
+.clear-btn:hover{background:#8b1a1a;color:#fff;border-color:#8b1a1a}
+
+/* ── CARDS LIST ── */
+#grid{display:flex;flex-direction:column;gap:10px}
+.empty{text-align:center;padding:80px 20px;color:#b0a49a;font-family:'Playfair Display',serif;font-size:1.2rem;font-style:italic}
+
+/* ── APP CARD ── */
+.app-card{display:flex;min-height:160px;background:#fff;border-radius:14px;border:1px solid #ede8e2;overflow:hidden;position:relative;transition:transform .28s cubic-bezier(.22,.61,.36,1),box-shadow .28s ease}
+.app-card:hover{transform:translateY(-4px);box-shadow:0 20px 48px rgba(139,26,26,.14)}
+.card-admin-ovl{display:none;position:absolute;top:10px;left:10px;gap:4px;z-index:5}
+.admin-mode .card-admin-ovl{display:flex}
+/* RTL flex-direction:row → first DOM child appears rightmost */
+/* Order: [num-strip RIGHT] [content CENTER] [actions LEFT] */
+.card-num-strip{width:54px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card-num-text{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:900;color:#8b1a1a;writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:1px}
+.card-content{flex:1;padding:20px 22px;min-width:0}
+.card-top-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.domain-badge{font-size:.65rem;font-weight:700;color:#8b1a1a;background:#fff5f5;border:1px solid #e0b8b8;border-radius:3px;padding:2px 8px;white-space:nowrap}
+.fav-btn-card{border:none;background:none;font-size:1.1rem;cursor:pointer;padding:0;line-height:1;transition:color .2s;color:#c8c0b4}
+.fav-btn-card.on{color:#8b1a1a}
+.fav-btn-card:hover{color:#8b1a1a}
+.card-name{font-family:'Playfair Display',serif;font-size:1.22rem;font-weight:800;line-height:1.25;margin-bottom:9px;color:#1a1a1a;text-align:right}
+.card-desc-text{font-size:.81rem;color:#6b6560;line-height:1.7;margin-bottom:11px;text-align:right}
+.card-tags-row{display:flex;flex-wrap:wrap;gap:5px}
+.card-tag{padding:3px 8px;border-radius:3px;border:1px solid #d4ccc4;background:#fafaf8;font-size:.68rem;color:#5c5450;font-family:'Heebo',sans-serif}
+/* Actions panel: in RTL flex row, last DOM child = leftmost visually */
+.card-actions{width:160px;background:#faf4e8;border-right:3px solid #8b1a1a;padding:20px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;flex-shrink:0}
+.btn-yt-card{width:100%;padding:9px 0;background:transparent;border:1.5px solid #8b1a1a;border-radius:24px;color:#8b1a1a;font-size:.76rem;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;transition:all .2s;text-align:center;line-height:1}
+.btn-yt-card:hover{background:#8b1a1a;color:#fff}
+.btn-open-card{width:100%;padding:12px 0;background:#1a1a1a;border:none;border-radius:24px;color:#fff;font-size:.85rem;font-weight:800;cursor:pointer;font-family:'Heebo',sans-serif;text-align:center;text-decoration:none;display:block;transition:background .2s;line-height:1}
+.btn-open-card:hover{background:#333}
+.abtn{padding:3px 8px;border:none;font-size:.72rem;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;transition:all .2s;border-radius:3px}
+.abtn-e{background:#dbeafe;color:#1d4ed8}.abtn-e:hover{background:#1d4ed8;color:#fff}
+.abtn-d{background:#fee2e2;color:#dc2626}.abtn-d:hover{background:#dc2626;color:#fff}
+
+/* ── PASSWORD OVERLAY ── */
+#pwOverlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;display:none;align-items:center;justify-content:center}
+#pwOverlay.open{display:flex}
+.pw-box{background:#fff;border-radius:18px;padding:34px 32px;width:330px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.18)}
+.pw-box h3{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:800;margin-bottom:6px}
+.pw-box p{font-size:.82rem;color:#aaa;margin-bottom:20px}
+#pwInput{width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:9px;font-size:.95rem;font-family:'Heebo',sans-serif;text-align:center;letter-spacing:3px;outline:none;margin-bottom:6px;transition:border .2s}
+#pwInput:focus{border-color:#8b1a1a}
+#pwErr{font-size:.8rem;color:#e11d48;min-height:20px;margin-bottom:12px}
+.pw-btns{display:flex;gap:8px}
+.pw-cancel{flex:1;padding:10px;border:1.5px solid #e5e7eb;border-radius:9px;background:#fff;font-family:'Heebo',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;color:#666}
+.pw-enter{flex:1;padding:10px;background:#1a1a1a;border:none;border-radius:9px;color:#fff;font-family:'Heebo',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer}
+.pw-enter:hover{background:#333}
+
+/* ── VIDEO MODAL ── */
+#videoOverlay{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:600;display:none;align-items:center;justify-content:center}
+#videoOverlay.open{display:flex}
+.vid-wrap{position:relative;max-width:860px;width:95%}
+.vid-wrap iframe{width:100%;aspect-ratio:16/9;border:none}
+.vid-close{position:absolute;top:-38px;left:0;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:1.2rem;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.vid-close:hover{background:rgba(255,255,255,.3)}
+
+/* ── ADMIN PANEL ── */
+#adminPanel{position:fixed;inset:0;background:#f5f0eb;z-index:400;display:none;overflow-y:auto}
+#adminPanel.open{display:block}
+.adm-hdr{background:#1a1a1a;padding:20px 32px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:10}
+.adm-hdr h2{font-family:'Playfair Display',serif;color:#fff;font-size:1.2rem;font-weight:800;flex:1}
+.adm-close{background:rgba(255,255,255,.12);border:none;color:#fff;width:36px;height:36px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:4px}
+.adm-close:hover{background:rgba(255,255,255,.22)}
+.adm-body{max-width:960px;margin:0 auto;padding:28px 24px}
+.adm-sec{background:#fff;border-right:4px solid #8b1a1a;padding:24px;margin-bottom:16px}
+.adm-sec h3{font-family:'Playfair Display',serif;font-size:1rem;font-weight:800;color:#1a1a1a;margin-bottom:16px}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:.7rem;font-weight:700;color:#5c5450;margin-bottom:5px;letter-spacing:.5px;text-transform:uppercase}
+.fld input,.fld textarea{width:100%;padding:10px 13px;border:1.5px solid #e5e7eb;font-size:.88rem;font-family:'Heebo',sans-serif;color:#1a1a1a;outline:none;transition:border .2s;background:#fafaf8}
+.fld input:focus,.fld textarea:focus{border-color:#8b1a1a}
+.fld textarea{resize:vertical;min-height:80px;line-height:1.6}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.adm-btns{display:flex;gap:8px;margin-top:18px}
+.abtn-save{background:#1a1a1a;color:#fff;flex:1;padding:11px;border:none;font-size:.88rem;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;transition:background .2s}
+.abtn-save:hover{background:#333}
+.abtn-cancel{background:transparent;color:#666;padding:11px 18px;border:1.5px solid #e5e7eb;font-size:.88rem;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif}
+.abtn-cancel:hover{background:#f5f0eb}
+.import-zone{border:2px dashed #c8bdb4;padding:26px;text-align:center;cursor:pointer;background:#fafaf8;transition:all .2s;color:#8b6a5a}
+.import-zone:hover{background:#f5f0eb;border-color:#8b1a1a;color:#8b1a1a}
+.import-zone p{font-weight:700;margin-bottom:3px;font-family:'Playfair Display',serif}
+.import-zone small{color:#b0a49a;font-size:.78rem}
+#importFile{display:none}
+.import-msg{margin-top:10px;padding:10px 14px;font-size:.85rem;font-weight:600}
+.import-msg.ok{background:#dcfce7;color:#166534}
+.import-msg.err{background:#fee2e2;color:#dc2626}
+.adm-tbl{width:100%;border-collapse:collapse;font-size:.83rem}
+.adm-tbl th{background:#f5f0eb;padding:9px 12px;text-align:right;font-weight:700;color:#8b6a5a;font-size:.72rem;letter-spacing:.5px;text-transform:uppercase;border-bottom:2px solid #e5ddd6}
+.adm-tbl td{padding:9px 12px;border-bottom:1px solid #f0ebe5;vertical-align:middle}
+.adm-tbl tr:hover td{background:#fafaf8}
+.t-num{font-family:'Playfair Display',serif;font-weight:800;color:#8b1a1a}
+.t-name{font-weight:600;max-width:200px;word-break:break-word}
+.t-link a{color:#8b1a1a;font-size:.75rem}.t-link a:hover{text-decoration:underline}
+.tb{padding:4px 10px;border:none;font-size:.73rem;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;transition:all .18s;margin-left:3px}
+.tb-e{background:#dbeafe;color:#1d4ed8}.tb-e:hover{background:#1d4ed8;color:#fff}
+.tb-d{background:#fee2e2;color:#dc2626}.tb-d:hover{background:#dc2626;color:#fff}
+
+/* ── EDIT OVERLAY ── */
+#editOverlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:700;display:none;align-items:center;justify-content:center}
+#editOverlay.open{display:flex}
+#editOverlay .modal{background:#fff;border-right:4px solid #8b1a1a;padding:28px;width:90%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.22)}
+#editOverlay h3{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:800;margin-bottom:18px;display:flex;align-items:center}
+#editOverlay .mclose{margin-right:auto;background:none;border:none;font-size:1.1rem;cursor:pointer;color:#aaa;padding:0 4px}
+#editOverlay .mclose:hover{color:#1a1a1a}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(8px);background:#1a1a1a;color:#fff;padding:10px 22px;font-size:.83rem;font-weight:600;opacity:0;transition:all .28s;z-index:800;pointer-events:none;white-space:nowrap;font-family:'Heebo',sans-serif}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── AUTH HEADER ── */
+.hdr-auth{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.btn-auth{border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:6px 13px;background:none;color:rgba(255,255,255,.75);font-family:'Heebo',sans-serif;font-size:.76rem;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-auth:hover{background:rgba(255,255,255,.12);color:#fff}
+.btn-auth.signup{background:#8b1a1a;border-color:#8b1a1a;color:#fff}
+.btn-auth.signup:hover{background:#a02020}
+.hdr-user-name{font-size:.74rem;color:rgba(255,255,255,.55);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ── AUTH MODALS ── */
+.auth-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:550;display:none;align-items:center;justify-content:center}
+.auth-ov.open{display:flex}
+.auth-box{background:#fff;border-radius:18px;padding:32px 28px;width:360px;box-shadow:0 24px 60px rgba(0,0,0,.18);text-align:right}
+.auth-box h3{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:800;margin-bottom:4px;color:#1a1a1a}
+.auth-sub{font-size:.8rem;color:#aaa;margin-bottom:22px}
+.auth-fld{margin-bottom:14px}
+.auth-fld label{display:block;font-size:.72rem;font-weight:700;color:#5c5450;margin-bottom:5px;letter-spacing:.4px}
+.auth-fld input{width:100%;padding:11px 13px;border:1.5px solid #e5e7eb;border-radius:9px;font-size:.9rem;font-family:'Heebo',sans-serif;color:#1a1a1a;outline:none;transition:border .2s;direction:ltr;text-align:left}
+.auth-fld input:focus{border-color:#8b1a1a}
+.auth-err{font-size:.78rem;color:#e11d48;min-height:18px;margin-bottom:10px}
+.auth-btn{width:100%;padding:11px;background:#1a1a1a;border:none;border-radius:10px;color:#fff;font-family:'Heebo',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:background .2s;margin-bottom:10px}
+.auth-btn:hover{background:#333}
+.auth-foot{display:flex;justify-content:space-between;font-size:.76rem;flex-wrap:wrap;gap:4px}
+.auth-foot button{background:none;border:none;color:#8b1a1a;cursor:pointer;font-family:'Heebo',sans-serif;font-size:.76rem;padding:0}
+.auth-foot button:hover{text-decoration:underline}
+/* ── MOBILE OVERLAY ── */
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:340}
+.sb-overlay.open{display:block}
+
+/* ── RESPONSIVE ── */
+@media(max-width:960px){
+  #main-wrap{padding:16px 12px;gap:0}
+  #filter-sidebar{position:fixed;right:0;top:0;bottom:0;width:280px;z-index:350;transform:translateX(110%);transition:transform .3s cubic-bezier(.22,.61,.36,1);box-shadow:-6px 0 32px rgba(0,0,0,.18);height:100vh;border-radius:0;max-height:100vh;top:0}
+  #filter-sidebar.open{transform:translateX(0)}
+  .hdr-mobile-filter{display:block}
+  .hdr-pill{display:none}
+  .hdr-search{width:auto;flex:1}
+  .card-actions{width:130px}
+}
+@media(max-width:600px){
+  #site-header{padding:0 16px;gap:10px}
+  .hdr-logo{font-size:.78rem;letter-spacing:2px}
+  .app-card{min-height:auto}
+  .card-name{font-size:1rem}
+  .card-actions{width:110px;padding:14px 10px}
+}
+</style>
+</head>
+<body>
+
+<!-- ── PASSWORD OVERLAY ── -->
+<div id="pwOverlay">
+  <div class="pw-box">
+    <h3>🔐 כניסת מנהל</h3>
+    <p>הכנס את סיסמת המנהל</p>
+    <input type="password" id="pwInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkPw()">
+    <div id="pwErr"></div>
+    <div class="pw-btns">
+      <button class="pw-cancel" onclick="closePw()">ביטול</button>
+      <button class="pw-enter" onclick="checkPw()">כניסה</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── HEADER ── -->
+<header id="site-header">
+  <div class="hdr-logo">SHARON MARGOLIN</div>
+  <div class="hdr-pill">PORTFOLIO INDEX 2025</div>
+  <div class="hdr-spacer"></div>
+  <div class="hdr-search">
+    <span class="hdr-search-icon">🔍</span>
+    <input id="searchIn" placeholder="חיפוש יישומים..." oninput="onSearch()">
+  </div>
+  <div class="hdr-auth" id="hdrAuth"></div>
+  <button class="hdr-mobile-filter" onclick="toggleMobileSidebar()">⚙ סינון</button>
+  <button class="hdr-admin" onclick="openGear()">⚙ מנהל</button>
+</header>
+
+<!-- ── MAIN WRAP ── -->
+<div id="main-wrap">
+  <div class="sb-overlay" id="sbOverlay" onclick="toggleMobileSidebar()"></div>
+
+  <!-- SIDEBAR (first DOM child = rightmost in RTL) -->
+  <aside id="filter-sidebar">
+
+    <div class="sb-counter">
+      <div class="sb-counter-num" id="appsCount">89</div>
+      <div class="sb-counter-label">יישומים נמצאו</div>
+    </div>
+
+    <div class="sb-section">
+      <label class="sb-row">
+        <input type="checkbox" id="cbFavs" onchange="toggleQF('favs',this)">
+        <span class="sb-row-label">♥ מועדפים בלבד</span>
+        <span class="sb-cnt" id="cnt-q-favs">0</span>
+      </label>
+    </div>
+
+    <div class="sb-section">
+      <label class="sb-row">
+        <input type="checkbox" onchange="toggleQF('video',this)">
+        <span class="sb-row-label">▶ יש סרטון הדגמה</span>
+        <span class="sb-cnt" id="cnt-q-video">0</span>
+      </label>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-sec-title">תחום</div>
+      <label class="sb-row"><input type="checkbox" onchange="toggleSbDomain('edtech',this)"><span class="sb-row-label">AI בחינוך (EDTECH)</span><span class="sb-cnt" id="sb-cnt-edtech"></span></label>
+      <label class="sb-row"><input type="checkbox" onchange="toggleSbDomain('media',this)"><span class="sb-row-label">עריכת מדיה וכלי עזר</span><span class="sb-cnt" id="sb-cnt-media"></span></label>
+      <label class="sb-row"><input type="checkbox" onchange="toggleSbDomain('creative',this)"><span class="sb-row-label">יצירתיות ובניה יוצרת</span><span class="sb-cnt" id="sb-cnt-creative"></span></label>
+      <label class="sb-row"><input type="checkbox" onchange="toggleSbDomain('automation',this)"><span class="sb-row-label">אוטומציה ופיתוח פרומפטים</span><span class="sb-cnt" id="sb-cnt-automation"></span></label>
+      <label class="sb-row"><input type="checkbox" onchange="toggleSbDomain('games',this)"><span class="sb-row-label">משחקים ופנאי</span><span class="sb-cnt" id="sb-cnt-games"></span></label>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-sec-title">פלטפורמה</div>
+      <label class="sb-row"><input type="checkbox" onchange="togglePlatform('aistudio',this)"><span class="sb-row-label">AI Studio</span><span class="sb-cnt" id="sb-cnt-aistudio"></span></label>
+      <label class="sb-row"><input type="checkbox" onchange="togglePlatform('websim',this)"><span class="sb-row-label">WebSim</span><span class="sb-cnt" id="sb-cnt-websim"></span></label>
+      <label class="sb-row"><input type="checkbox" onchange="togglePlatform('gem',this)"><span class="sb-row-label">Gem (Gemini)</span><span class="sb-cnt" id="sb-cnt-gem"></span></label>
+      <label class="sb-row"><input type="checkbox" onchange="togglePlatform('gemini',this)"><span class="sb-row-label">Gemini Share</span><span class="sb-cnt" id="sb-cnt-gemini"></span></label>
+      <label class="sb-row"><input type="checkbox" onchange="togglePlatform('chatgpt',this)"><span class="sb-row-label">ChatGPT</span><span class="sb-cnt" id="sb-cnt-chatgpt"></span></label>
+      <label class="sb-row"><input type="checkbox" onchange="togglePlatform('lovable',this)"><span class="sb-row-label">Lovable</span><span class="sb-cnt" id="sb-cnt-lovable"></span></label>
+      <label class="sb-row"><input type="checkbox" onchange="togglePlatform('base44',this)"><span class="sb-row-label">Base44</span><span class="sb-cnt" id="sb-cnt-base44"></span></label>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-sec-title">מיון</div>
+      <label class="sb-row"><input type="radio" name="sortR" value="desc" checked onchange="setSort('desc')"><span class="sb-row-label">לפי מספר יישום</span></label>
+      <label class="sb-row"><input type="radio" name="sortR" value="alpha" onchange="setSort('alpha')"><span class="sb-row-label">לפי שם (א-ת)</span></label>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-sec-title">תגיות פופולריות</div>
+      <div class="sb-tags" id="popularTagsContainer"></div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main id="main-content">
+    <div class="main-top-bar">
+      <div class="main-title">נמצאו: <span class="main-title-count" id="appsCount2">89</span> יישומים</div>
+      <button id="clearFiltersBtn" class="clear-btn" onclick="clearAllFilters()">✕ נקה הכל</button>
+    </div>
+    <div id="grid"></div>
+  </main>
+
+</div>
+
+<!-- ── REGISTER MODAL ── -->
+<div class="auth-ov" id="registerOv">
+  <div class="auth-box">
+    <h3>הרשמה</h3>
+    <p class="auth-sub">צור חשבון כדי לשמור מועדפים בין מכשירים</p>
+    <div class="auth-fld"><label>כתובת מייל</label><input type="email" id="regEmail" placeholder="you@example.com" autocomplete="email"></div>
+    <div class="auth-fld"><label>סיסמה</label><input type="password" id="regPw" placeholder="לפחות 4 תווים" autocomplete="new-password"></div>
+    <div class="auth-fld"><label>אימות סיסמה</label><input type="password" id="regPw2" placeholder="חזור על הסיסמה" autocomplete="new-password"></div>
+    <div class="auth-err" id="regErr"></div>
+    <button class="auth-btn" onclick="doRegister()">הירשם</button>
+    <div class="auth-foot">
+      <button onclick="closeRegister();openLogin()">כבר יש לי חשבון — כניסה</button>
+      <button onclick="closeRegister()">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── LOGIN MODAL ── -->
+<div class="auth-ov" id="loginOv">
+  <div class="auth-box">
+    <h3>כניסה</h3>
+    <p class="auth-sub">התחבר כדי לראות את המועדפים שלך</p>
+    <div class="auth-fld"><label>כתובת מייל</label><input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email"></div>
+    <div class="auth-fld"><label>סיסמה</label><input type="password" id="loginPw" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="auth-err" id="loginErr"></div>
+    <button class="auth-btn" onclick="doLogin()">כניסה</button>
+    <div class="auth-foot">
+      <button onclick="closeLogin();openRegister()">אין לי חשבון — הרשמה</button>
+      <button onclick="closeLogin();openForgot()">שכחתי סיסמה</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── FORGOT PASSWORD MODAL ── -->
+<div class="auth-ov" id="forgotOv">
+<div class="auth-box">
+    <h3>איפוס סיסמה</h3>
+    <p class="auth-sub">הזן את המייל שלך ובחר סיסמה חדשה</p>
+    <div class="auth-fld"><label>כתובת מייל</label><input type="email" id="fgtEmail" placeholder="you@example.com"></div>
+    <div class="auth-fld"><label>סיסמה חדשה</label><input type="password" id="fgtPw" placeholder="לפחות 4 תווים"></div>
+    <div class="auth-err" id="fgtErr"></div>
+    <button class="auth-btn" onclick="doForgot()">עדכן סיסמה</button>
+    <div class="auth-foot">
+      <button onclick="closeForgot();openLogin()">חזרה לכניסה</button>
+      <button onclick="closeForgot()">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── VIDEO OVERLAY ── -->
+<div id="videoOverlay" onclick="if(event.target===this)closeVideo()">
+  <div class="vid-wrap">
+    <button class="vid-close" onclick="closeVideo()">✕</button>
+    <iframe id="vidFrame" allowfullscreen></iframe>
+  </div>
+</div>
+
+<!-- ── ADMIN PANEL ── -->
+<div id="adminPanel">
+  <div class="adm-hdr">
+    <h2>מערכת ניהול — Sharon Margolin Portfolio</h2>
+    <button class="adm-close" onclick="closeAdmin()">✕</button>
+  </div>
+  <div class="adm-body">
+    <div class="adm-sec">
+      <h3>יישום חדש</h3>
+      <button class="abtn-save" style="width:auto;padding:10px 28px" onclick="openAddNew()">+ הוסף יישום</button>
+    </div>
+    <div class="adm-sec">
+      <h3>ייבוא מ-Excel</h3>
+      <div class="import-zone" onclick="g('importFile').click()">
+        <p>לחץ להעלאת קובץ Excel</p>
+        <small>עמודות: מספר סידורי | שם | קישור | YouTube | תיאור | תגיות | תחומים</small>
+      </div>
+      <input type="file" id="importFile" accept=".xlsx,.xls" onchange="importExcel(this)">
+      <div id="importMsg"></div>
+    </div>
+    <div class="adm-sec">
+      <h3>ניהול משתמשים <span id="usersCount" style="color:#8b1a1a;font-family:'Playfair Display',serif"></span></h3>
+      <div style="overflow-x:auto">
+        <table class="adm-tbl">
+          <thead><tr><th>מייל</th><th>מועדפים</th><th>נרשם</th><th>פעולות</th></tr></thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="adm-sec">
+      <h3>כל היישומים <span id="admCount" style="color:#8b1a1a;font-family:'Playfair Display',serif"></span></h3>
+      <input type="text" id="admSearch" placeholder="חיפוש מהיר..." oninput="renderAdmTable()"
+        style="width:220px;padding:8px 12px;border:1.5px solid #e5e7eb;font-family:'Heebo',sans-serif;font-size:.85rem;outline:none;background:#fafaf8;margin-bottom:14px">
+      <div style="overflow-x:auto">
+        <table class="adm-tbl">
+          <thead><tr><th>#</th><th>שם</th><th>קישור</th><th>YouTube</th><th>פעולות</th></tr></thead>
+          <tbody id="admBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── EDIT OVERLAY ── -->
+<div id="editOverlay">
+  <div class="modal">
+    <h3 id="editTitle">יישום חדש <button class="mclose" onclick="closeEdit()">✕</button></h3>
+    <input type="hidden" id="eId">
+    <div class="row2">
+      <div class="fld"><label>מספר סידורי *</label><input type="number" id="eNum" min="1" placeholder="90"></div>
+      <div class="fld"><label>שם היישום *</label><input type="text" id="eName" placeholder="שם..."></div>
+    </div>
+    <div class="fld"><label>קישור ליישום *</label><input type="url" id="eLink" placeholder="https://..."></div>
+    <div class="fld"><label>קישור YouTube</label><input type="url" id="eYt" placeholder="https://youtu.be/..."></div>
+    <div class="fld"><label>תיאור</label><textarea id="eDesc" placeholder="תיאור מפורט..."></textarea></div>
+    <div class="row2">
+      <div class="fld"><label>מילות מפתח (פסיק)</label><input type="text" id="eTags" placeholder="AI, כיתה, ..."></div>
+      <div class="fld"><label>תחומים (פסיק)</label><input type="text" id="eDoms" placeholder="חינוך, יצירה, ..."></div>
+    </div>
+    <div class="adm-btns">
+      <button class="abtn-cancel" onclick="closeEdit()">ביטול</button>
+      <button class="abtn-save" onclick="saveApp()">שמור</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- ══════════════════ SCRIPT ══════════════════ -->
+<script>
+const ADMIN_PW = "049909321";
+
+const INITIAL_APPS = [
+{num:1,name:"מצלמת עשורים",link:"https://gemini.google.com/share/f1bedd035732",yt:"",desc:"פתחו את הקישור בטלפון שלכם, אשרו גישה למצלמה. קבעו עם הגלגל את העשור אליו אתם רוצים לנסוע בזמן. צלמו תמונה, בחרו האם עם טקסט או ללא טקסט. האפליקציה תמיר את הצילום לעשור המתאים.",tags:["צילום","עריכת תמונות","טיים-טראוול","Gemini","פילטרים"],domains:[]},
+{num:2,name:"YoutubeLesson — להפוך סרטון יוטיוב לשיעור",link:"https://ai.studio/apps/ceaf1b23-210f-42b2-9e0c-8356b8a69c3a?fullscreenApplet=true",yt:"https://youtu.be/wtoOiINgbcU",desc:"בסביבה זו תוכלו להעלות סרטון מיוטיוב, להוסיף עליו עצירות לאורך ציר הזמן, לכל עצירה תוכלו לשייך מידע, שאלות, אתרי אינטרנט וקבצים. לבסוף הורידו את התוצר כקובץ HTML.",tags:["יוטיוב","ציר זמן","שיעורים","HTML","AI Studio"],domains:[]},
+{num:3,name:"חקירה באמצעות תמונה",link:"https://gemini.google.com/share/bb0f5d179ef9",yt:"https://youtu.be/EJXA2lgYTeM",desc:"התלמידים יוכלו לחקור כל נושא שירצו דרך תמונה, להעמיק בחקר שלהם, להוסיף פתקיות מידע ולהוסיף הערות בגוף הטקסט.",tags:["חקר","תמונה","פתקיות","שאלות","Gemini"],domains:[]},
+{num:4,name:"כותב פרומפטים לג'מיני קנבס",link:"https://chatgpt.com/share/6a0c1332-2764-838b-9bd4-7b0933afee46",yt:"",desc:"כתבו לו במשפט מה המטרה, הנושא הלימודי ומי קהל היעד — הוא יכתוב לכם פרומפט מפורט להכניס לג'מיני קנבס מצב מעמיק.",tags:["פרומפטים","קנבס","ChatGPT","כתיבה","Gemini"],domains:[]},
+{num:5,name:"PromptLM",link:"https://ai.studio/apps/4a331ed9-ecb2-474d-8106-68f8db7cbe1c?fullscreenApplet=true",yt:"https://youtu.be/2jJY3xWyeFc",desc:"מאגר פרומפטים לשימוש בנוטבוק LM. הכינו מאגר פרומפטים, הורידו כקובץ, העלו לנוטבוק כמקור והפעילו באמצעות מילות קוד.",tags:["פרומפטים","NotebookLM","מאגר","מילות קוד","AI Studio"],domains:[]},
+{num:6,name:"סביבת היבחנות סגורה",link:"https://ai.studio/apps/ec5b5412-8e93-4181-a827-b0e16cd94812?fullscreenApplet=true",yt:"",desc:"צרו מבחן בגוגל, העתיקו את הקישור, היכנסו לסביבה, הגדירו טיימר ועוזרים — והפעילו את המבחן.",tags:["מבחנים","Google Forms","טיימר","הערכה","AI Studio"],domains:[]},
+{num:7,name:"PodcastEverything",link:"https://ai.studio/apps/1bb6ad4f-6af4-42ab-9dbb-e14dfd1ba2b8?fullscreenApplet=true",yt:"https://youtu.be/iriLsnbx8Uo",desc:"הפכו כל תוכן לפודקאסט מרתק עם AI Studio — מסמכים, מצגות ועוד.",tags:["פודקאסט","NotebookLM","אודיו","יצירה","AI Studio"],domains:[]},
+{num:8,name:"Slide Decomposer Pro",link:"https://ai.studio/apps/73c96f22-af4e-403c-a3a7-2beba15fdbd0?fullscreenApplet=true",yt:"https://youtu.be/zJKAyD_iYXg",desc:"מאפשרת לפרק אלמנטים בכל שקופית של נוטבוק LM ולהוריד אותם בנפרד לעריכה בפאוורפוינט.",tags:["שקופיות","NotebookLM","פאוורפוינט","עיצוב","AI Studio"],domains:[]},
+{num:9,name:"PrintArt Studio",link:"https://ai.studio/apps/1ac45b92-0572-4b36-8949-aa064c11df41?fullscreenApplet=true",yt:"",desc:"רוצים ליצור אומנות ולתלות בבית? זו האפליקציה בשבילכם.",tags:["אמנות","הדפסה","ויזואלי","יצירה","AI Studio"],domains:[]},
+{num:10,name:"Stories & Songs creator for kids",link:"https://gemini.google.com/gem/1jMjBF2pV1ukd9kznaofKiTwikP_-KCr3?usp=sharing",yt:"",desc:"כלי ליצירת סיפורים ושירים חינוכיים לילדים באנגלית. הזינו נושא — הכלי יפיק סיפור ושיר מקוריים.",tags:["סיפורים","שירים","ילדים","אנגלית","Gem"],domains:[]},
+{num:11,name:"פירי פירי",link:"https://gemini.google.com/gem/1d76zkXgRDpOAGN1UM9f9vj_spmIfndrN?usp=sharing",yt:"",desc:"הבוט פירי פירי יסייע לכם ליצור הנחיה מפורטת ליצירת משחק P2P מרובה משתתפים און ליין, ללא בסיס נתונים.",tags:["משחקים","P2P","רב-משתתפים","בוט","Gem"],domains:[]},
+{num:12,name:"שיראל",link:"https://gemini.google.com/gem/1WqbwFA-g_RmGcdGCR_Ze2sKZomoRaBbl?usp=sharing",yt:"",desc:"שיראל היא בוטית AI המסייעת ביצירת שירים באופן מלא — מילים, סגנון מוזיקלי, כלי נגינה ואופן הגשה.",tags:["שירים","מוזיקה","מילים","יצירה","Gem"],domains:[]},
+{num:13,name:"איפה זה",link:"https://gemini.google.com/gem/15wLxs2hnO9yWPFzU4vsCeUki3hRUBqSv?usp=sharing",yt:"",desc:"החביאו פריטים בתוך תמונה מסוג איפה אפי.",tags:["חיפוש","תמונה","איפה אפי","משחק","Gem"],domains:[]},
+{num:14,name:"איפה הסיפור",link:"https://gemini.google.com/gem/1V_pTzRXSk6W81C15aGwOAJPj_BtJKU5Z?usp=sharing",yt:"",desc:"צור מסיפור / שיר / כתבה / מידע תמונה בסגנון איפה אפי.",tags:["סיפור","תמונה","איפה אפי","יצירה","Gem"],domains:[]},
+{num:15,name:"איפה הם",link:"https://gemini.google.com/gem/1BrjxBfOwnejXumVnDlPwoSk91o5RTpD4?usp=sharing",yt:"",desc:"חפש מספר דמויות בתוך תמונה מסוג איפה אפי.",tags:["דמויות","חיפוש","איפה אפי","משחק","Gem"],domains:[]},
+{num:16,name:"image remix studio",link:"https://ai.studio/apps/5a28e330-f229-4cdb-8a88-c2431cd48f82?fullscreenApplet=true",yt:"https://youtu.be/_wk0i3w2pTY",desc:"שנה כל פרט ואלמנט בתמונה.",tags:["עריכת תמונות","פילטרים","AI Studio","יצירה","remix"],domains:[]},
+{num:17,name:"איפה אפי",link:"https://gemini.google.com/gem/1V_bPKGZ2Wu-6oWljqUJIn2WnSUifwqWk?usp=sharing",yt:"https://youtu.be/yFpiBIgah7s",desc:"משחק חיפוש והרפתקאות אינטראקטיבי, המבוסס על סדרת הספרים האהובה. צור תמונה בסגנון זה עם צילום שלך.",tags:["הרפתקאות","חיפוש","תמונה","איפה אפי","Gem"],domains:[]},
+{num:18,name:"בוקי",link:"https://gemini.google.com/gem/1iIkcq4OSciI3qMEJRC0Isqj2rQ83A6bi?usp=sharing",yt:"",desc:"בוט שמסייע ליצור סיפור קולי בנוטבוק LM.",tags:["סיפור קולי","NotebookLM","בוט","אודיו","Gem"],domains:[]},
+{num:19,name:"פודי",link:"https://gemini.google.com/gem/1dHafNaPobP8iFwDQ_irnrQpVxvLJW44l?usp=sharing",yt:"https://youtu.be/34ANZtSULik",desc:"מסייע ביצירת פודקסטים עם זרימה בין הדוברים ומשחקי תפקידים.",tags:["פודקאסט","NotebookLM","דוברים","בוט","Gem"],domains:[]},
+{num:20,name:"קיר-לי",link:"https://gemini.google.com/gem/1cYpFy0mC-Mfc2Wv0m987CP6RNEf9VbCn?usp=sharing",yt:"",desc:"מסייע בעיצוב מרחבי למידה לגן ולכיתה.",tags:["עיצוב פנים","גן","כיתה","מרחב למידה","Gem"],domains:[]},
+{num:21,name:"גיימר מקוון",link:"https://gemini.google.com/gem/1cXtvNy9Oi3HTQN3PcApanyMbpphQs7uv?usp=sharing",yt:"https://youtu.be/yq0O9w0yvuc",desc:"צרו Notebooklm בנושא שאתם מלמדים, היכנסו לבוט, ענו על השאלות, קבלו פרומפט וחיזרו ל-NotebookLM.",tags:["NotebookLM","משחק","שאלות","פרומפט","Gem"],domains:[]},
+{num:22,name:"גיימר",link:"https://gemini.google.com/gem/1dWq4VBDJ9fzw3TUh-5IUUlIV7G9NXPSn?usp=sharing",yt:"",desc:"בוט זה יספק לכם פרומפט מדויק ליצירת משחק ב-NotebookLM.",tags:["NotebookLM","פרומפט","משחק","בוט","Gem"],domains:[]},
+{num:23,name:"La Galleria — מחסן תמונות",link:"https://la-galleria--margolin.on.websim.com/",yt:"",desc:"העלו תמונה ציבורית וקבלו קישור להטמעה באתרים שונים.",tags:["תמונות","קישורים","אחסון","הטמעה","WebSim"],domains:[]},
+{num:24,name:"מאינפוגרפיקה לשיעור",link:"https://ai.studio/apps/b098f816-915f-4c7e-8fc5-237222304136?fullscreenApplet=true",yt:"https://youtu.be/Sv5P7LPPKB0",desc:"העלו אינפוגרפיקה והוסיפו עליה נקודות חמות עם מידע, שאלות וקישורים.",tags:["אינפוגרפיקה","נקודות חמות","שיעורים","AI Studio","אינטראקטיבי"],domains:[]},
+{num:25,name:"קול קורא",link:"https://gemini.google.com/share/09dd2039b805",yt:"",desc:"העלו PDF בעברית — המערכת תחלק לחלקים, תוסיף קריינות ותאפשר הוספת שאלות.",tags:["PDF","עברית","קריינות","שאלות","Gemini"],domains:[]},
+{num:26,name:"Complete English Reader",link:"https://gemini.google.com/share/73ef41034de2",yt:"",desc:"העלו PDF לימודי — המערכת תפרק לחלקים, תוסיף קריינות ותאפשר הוספת תמונות ושאלות.",tags:["PDF","אנגלית","קריינות","קריאה","Gemini"],domains:[]},
+{num:27,name:"מתקנת האינפוגרפיקות המשובשות של NotebookLM",link:"https://ai.studio/apps/4cafd871-dd2f-4027-a3cd-d986fdb684a2?fullscreenApplet=true",yt:"",desc:"יצרתם אינפוגרפיקה עם טקסט משובש? העלו את התמונה לכאן ותקנו אותה.",tags:["אינפוגרפיקה","NotebookLM","תיקון","עריכה","AI Studio"],domains:[]},
+{num:28,name:"גברת מצגר — אדריכלית מצגות לגנים",link:"https://gemini.google.com/gem/1rUwqJScCwXcmnvvYnSCK_Izb4e4fRcRK?usp=sharing",yt:"",desc:"מסייעת ליצור מצגות ב-NotebookLM לילדים בגנים.",tags:["מצגות","NotebookLM","גן ילדים","בוטית","Gem"],domains:[]},
+{num:29,name:"דוגמאות לאינפוגרפיקות ל-NotebookLM",link:"https://docs.google.com/presentation/d/1SiWId2Y7WANON4z23BC-MITnWFfq96yFIZPikQBamUw/edit?usp=sharing",yt:"",desc:"מאגר רעיונות לעיצובי אינפוגרפיקות ב-NotebookLM עם הפרומפטים שלהם.",tags:["אינפוגרפיקה","NotebookLM","עיצוב","פרומפטים","Google Slides"],domains:[]},
+{num:30,name:"חותך התמונות",link:"https://ai.studio/apps/7bcacf4a-a64d-4151-8c92-12f7b69fbb2a?fullscreenApplet=true",yt:"",desc:"חותך תמונה לחלקים לפי הצורך שלכם.",tags:["חיתוך","תמונה","AI Studio","עריכה","כלי"],domains:[]},
+{num:31,name:"שרית — אדריכלית האינפוגרפיקות לנוטבוק",link:"https://gemini.google.com/gem/1B3YSay5-3B-d37LAFqiLLQhOdigIOR4Y?usp=sharing",yt:"",desc:"בוטית שמספקת פרומפט ליצירת אינפוגרפיקות ב-NotebookLM.",tags:["אינפוגרפיקות","NotebookLM","בוטית","פרומפט","Gem"],domains:[]},
+{num:32,name:"מר מצגר — אדריכל המצגות לנוטבוק",link:"https://gemini.google.com/gem/1JO8xCrPt11_lPwhLY22PyHYhRl5T7vIB?usp=sharing",yt:"",desc:"בוט שמספק פרומפט ליצירת מצגות ב-NotebookLM.",tags:["מצגות","NotebookLM","בוט","פרומפט","Gem"],domains:[]},
+{num:33,name:"סטיב — אדריכל הסרטים לנוטבוק",link:"https://gemini.google.com/gem/1L_krbgc4ZtJOnqYVAZRidiTOQ0On9x9M?usp=sharing",yt:"",desc:"בוט שמספק פרומפט ליצירת סרטים ב-NotebookLM.",tags:["סרטים","NotebookLM","בוט","פרומפט","Gem"],domains:[]},
+{num:34,name:"יועץ לפיתוח אפליקציה משחקית",link:"https://ai.studio/apps/drive/1KHMBEsS-Oojk2PbQFUv8itWFAgx66F9m?fullscreenApplet=true",yt:"",desc:"מנחה לפיתוח אפליקציה משחקית לצורך לימודי / חברתי / רגשי, שלב אחר שלב.",tags:["אפליקציות","AI Studio","פדגוגיה","פיתוח","גיימיפיקציה"],domains:[]},
+{num:35,name:"חיבור Google AI Studio לבסיס נתונים בחינם",link:"https://ai.studio/apps/drive/1KHMBEsS-Oojk2PbQFUv8itWFAgx66F9m?fullscreenApplet=true",yt:"",desc:"בניתם אפליקציה ואתם רוצים לחבר אותה לגליון גוגל או תיקייה בדרייב?",tags:["AI Studio","Google Sheets","בסיס נתונים","דרייב","אינטגרציה"],domains:[]},
+{num:36,name:"שירלי — מחוללת שירים",link:"https://gemini.google.com/gem/1KoqYlGXqJ5NNmEeEFxevENtv4u8SBCHW?usp=sharing",yt:"",desc:"שירלי היא גאון בכתיבת מילים לשירים והנחיות ללחן לשירה ולנגינה.",tags:["שירים","מילים","לחן","יצירה","Gem"],domains:[]},
+{num:37,name:"מתאם אפליקציות קנבס לג'ניאלי",link:"https://gemini.google.com/gem/1GB-Oj_--fmwqkKqKxf6G7F4wkSTd6bhd?usp=sharing",yt:"",desc:"יצרתם אפליקציה בקנבס ורוצים להטמיע אותה בג'ניאלי? הדביקו את הקוד וקבלו גרסה מותאמת.",tags:["קנבס","ג'ניאלי","Gem","אינטגרציה","כלי"],domains:[]},
+{num:38,name:"מחולל קלפי עבודה וטיפול",link:"https://ai.studio/apps/256c8e44-f1da-427c-a918-9039adfa42dc?fullscreenApplet=true",yt:"https://youtu.be/MrAlRruonVM",desc:"יצירה מהירה וקלה של קלפי טיפול מותאמים אישית לאנשי מקצוע.",tags:["קלפים","טיפול","AI Studio","הדפסה","יצירה"],domains:[]},
+{num:39,name:"מחולל כרטיסיות",link:"https://ai.studio/apps/drive/1YNBfc2n7TVVXrbwGiYgBHSzV9bd8uPh3?fullscreenApplet=true",yt:"https://youtu.be/3eSUVTpbKdU",desc:"יצרתם כרטיסיות ב-NotebookLM ורוצים להדפיס? העלו את הקובץ, קבעו הגדרות והורידו PDF.",tags:["כרטיסיות","NotebookLM","PDF","הדפסה","AI Studio"],domains:[]},
+{num:40,name:"מייצר דפי עבודה",link:"https://ai.studio/apps/drive/17oUmZPOcFhHSMoEfYMn0mbHxzqB7xyXu?fullscreenApplet=true",yt:"",desc:"הכלי מייצר דפי עבודה מותאמים אישית למורים לנושאים שונים ורמות קושי מגוונות.",tags:["דפי עבודה","AI Studio","מורים","הוראה","התאמה אישית"],domains:[]},
+{num:41,name:"יוצר פתרונות למידה לקורסים",link:"https://ai.studio/apps/f4447319-1da0-40fe-82fb-11afff152a64?fullscreenApplet=true",yt:"",desc:"רוצים ליצור פתרון למידה עם עזרת בינה מלאכותית? הגעתם למקום.",tags:["קורסים","AI Studio","למידה","פיתוח","e-learning"],domains:[]},
+{num:42,name:"במאי קליפים",link:"https://ai.studio/apps/drive/1OrbHYa3tSFv9w1cq4r3gu1SxMQYfH6U0?fullscreenApplet=true",yt:"",desc:"יצירת קונספטואליזציה לקליפי מוזיקה — הנחיות ויזואליות ותיאוריות לתמונות וסרטונים.",tags:["קליפים","מוזיקה","AI Studio","ויזואלי","יצירה"],domains:[]},
+{num:43,name:"Last Frame",link:"https://lastrame--margolin.on.websim.com/",yt:"",desc:"חילוץ מהיר ונוח של הפריים האחרון מסרטוני וידאו.",tags:["וידאו","פריים","WebSim","עריכה","כלי"],domains:[]},
+{num:44,name:"Storyboard Director",link:"https://ai.studio/apps/drive/1hKu1zR5deaxUPmR3D2823BasErD5x0gE?fullscreenApplet=true",yt:"https://youtu.be/EY1E76ipIKQ",desc:"יוצר סטוריבורד של תמונות, קריינות והנחיות ליצירת וידאו מסיפור.",tags:["סטוריבורד","AI Studio","תמונות","וידאו","יצירה"],domains:[]},
+{num:45,name:"StoryIT",link:"https://gemini.google.com/share/530d24d74f11",yt:"",desc:"ללמוד איטלקית דרך סיפור אינסופי.",tags:["איטלקית","שפה","סיפור","למידה","Gemini"],domains:[]},
+{num:46,name:"מפצח יחידות הוראה",link:"https://ai.studio/apps/drive/1vV9_Bf98-VJILqxWmadCtBlz7r0LjN0Z?fullscreenApplet=true",yt:"",desc:"עוזר למורים לבנות יחידות הוראה משולבות AI.",tags:["יחידות הוראה","AI Studio","מורים","תכנון","פדגוגיה"],domains:[]},
+{num:47,name:"MathVoice",link:"https://ai.studio/apps/drive/1cncRXSjRhUge9_h9QaJRrfEF2WLQNq4r?fullscreenApplet=true",yt:"",desc:"המרה קולית או טקסטואלית של נוסחה מתמטית לכתיבה בשיטת LaTeX.",tags:["מתמטיקה","LaTeX","AI Studio","קול","המרה"],domains:[]},
+{num:48,name:"מייצר בוטים ללמידה פעילה",link:"https://gemini.google.com/gem/1zFOiFoCIuMYN4L5LaNTRd4toM-gIX_Eh?usp=sharing",yt:"",desc:"כלי ליצירת בוטים מותאמים אישית ללמידה פעילה ב-Gemini.",tags:["בוטים","Gem","למידה פעילה","כיתה","התאמה"],domains:[]},
+{num:49,name:"ממליץ על יישומי AI לפי צורך פדגוגי",link:"https://gemini.google.com/gem/1D8xWRTbzcudOu6nHZKt-7OsfdtYt0JN8?usp=sharing",yt:"",desc:"הכלי מסייע למורים לבחור יישומי AI מתאימים לשימוש בכיתה.",tags:["כלי AI","Gem","פדגוגיה","המלצות","מורים"],domains:[]},
+{num:50,name:"קפה עולמי",link:"https://cafeolami--margolin.on.websim.com/",yt:"",desc:"משחק הכרות ושיח — מבוסס על שיטת קפה עולמי.",tags:["הכרות","שיח","WebSim","קפה עולמי","משחק"],domains:[]},
+{num:51,name:"תפזורת מילים",link:"https://milim--margolin.on.websim.com/",yt:"",desc:"כלי שמייצר תפזורות מילים לבחירת היוצר.",tags:["תפזורת","מילים","WebSim","משחק","יצירה"],domains:[]},
+{num:52,name:"בודק אמינות",link:"https://gemini.google.com/gem/1fxIE8vatW2NM3mTDNFjjGSxlCKzlwOsh?usp=sharing",yt:"",desc:"בודק את האמינות של תכנים שנוצרו על ידי מודל שפה.",tags:["אמינות","Fake news","Gem","ביקורתיות","בדיקה"],domains:[]},
+{num:53,name:"מפעל גלידות",link:"https://ai.studio/apps/drive/1ViKAKlHHiJDizrzvYT97VE4TXiyG9J3J",yt:"",desc:"יצירת גלידה וירטואלית בהתאמה אישית — טעם, תוספות ותכונות.",tags:["גלידה","יצירה","AI Studio","ויזואלי","ילדים"],domains:[]},
+{num:54,name:"משפר תמונות",link:"https://ai.studio/apps/drive/1ubruceUJGYMCd5dEUfmD7S8lBHcVGRI8?fullscreenApplet=true",yt:"https://youtu.be/eVejYx1dmEY",desc:"שפר תמונות בקלות ובמהירות באמצעות כלי AI מתקדם.",tags:["תמונות","שיפור","AI Studio","עריכה","איכות"],domains:[]},
+{num:55,name:"מסייעת לבניית טפסים של קנבה קוד",link:"https://ai.studio/apps/drive/1Jrjrpnf0o4bT4kx86LvBwNOr2t-bs7lz",yt:"https://youtu.be/0qgEXzkjmtU",desc:"כלי AI ליצירת פרומפטים מותאמים לבניית טפסים מורכבים בקנבה קוד.",tags:["קנבה קוד","טפסים","AI Studio","פרומפטים","בניה"],domains:[]},
+{num:56,name:"Visual Story AI",link:"https://ai.studio/apps/drive/1WypltL9Mz2EykVmfhKATCSQvnGZ8T8pf",yt:"https://youtu.be/BhSLrpkazF0",desc:"יצירת סדרות תמונות עקביות המבוססות על תמונת מקור עם דמות.",tags:["תמונות","סדרות","AI Studio","יצירה","עקביות"],domains:[]},
+{num:57,name:"זיו — מערכת הרשמה לימי הורים",link:"https://websim.com/p/mhf4nm27a_tf38coj_60",yt:"https://youtu.be/8lhG-CJWGsI",desc:"מערכת ידידותית למורה ולתלמיד לתזמון פשוט ויעיל של ימי הורים.",tags:["ימי הורים","WebSim","הרשמה","מורים","תזמון"],domains:[]},
+{num:58,name:"מערכת הערכה פדגוגית גמישה",link:"https://ai.studio/apps/drive/1DdjQ0QYUNSqHbs2lD1kfNqsxS482xVab",yt:"https://youtu.be/J7n6X1arDxY",desc:"מערכת הערכה פדגוגית גמישה המבוססת על AI, לתחומי דעת וסוגי הערכה מגוונים.",tags:["הערכה","AI Studio","פדגוגיה","מורים","גמיש"],domains:[]},
+{num:59,name:"AuraMix",link:"https://app--aura-mix-cecd16d1.base44.app/",yt:"",desc:"יצירת קטעי דמיון מודרך מותאמים אישית — נושא, אווירה וקצב.",tags:["דמיון מודרך","מדיטציה","אודיו","אווירה","Base44"],domains:[]},
+{num:60,name:"מיקסר",link:"https://ai.studio/apps/drive/1qS3lRHV0YdRrHTV7_pWvt-EWxR_Iu53r",yt:"https://youtu.be/EdtwMMkaEmI",desc:"כלי רב-ערוצי ליצירת מיקסים מקצועיים מקבצי אודיו.",tags:["אודיו","מיקס","AI Studio","מוזיקה","רב-ערוצי"],domains:[]},
+{num:61,name:"מסרט לפרומפט",link:"https://ai.studio/apps/drive/1ieHcP-JfLcdUIbXPxL-Mzwzka6HFd71k",yt:"",desc:"העלו סרטון וידאו ונסו לשחזר את הפרומפט המקורי ששימש ליצירתו.",tags:["וידאו","פרומפט","AI Studio","שחזור","ניתוח"],domains:[]},
+{num:62,name:"מכתב לדמויות מפורסמות",link:"https://pletters--margolin.on.websim.com/",yt:"",desc:"כתבו מכתב לדמות מפורסמת וקבלו מכתב תשובה אישי.",tags:["כתיבה","דמויות מפורסמות","WebSim","מכתב","יצירה"],domains:[]},
+{num:63,name:"משחק תחפושות לפורים",link:"https://purim--margolin.on.websim.com/",yt:"",desc:"ענו על שאלון אישיות קצרצר וגלו איזו דמות מפורסמת הכי מתאימה לכם לתחפושת.",tags:["פורים","תחפושת","WebSim","אישיות","משחק"],domains:[]},
+{num:64,name:"יוצר ייצורים מוזרים",link:"https://fictional-creature-image-generator--margolin.on.websim.com/",yt:"",desc:"תארו יצור דמיוני בעברית — הבינה המלאכותית תמיר את התיאור לתמונה.",tags:["ייצורים","תמונה","WebSim","דמיון","יצירה"],domains:[]},
+{num:65,name:"יוצר פרומפטים לעולמות מיניאטורים",link:"https://miniature-world-prompt-creator--margolin.on.websim.com/",yt:"",desc:"כלי ליצירת פרומפטים מותאמים לתמונות וסרטוני וידאו של עולמות מיניאטוריים.",tags:["מיניאטורים","פרומפטים","WebSim","תמונה","וידאו"],domains:[]},
+{num:66,name:"לומינוקס",link:"https://luminox-strategic-light-game--margolin.on.websim.com/",yt:"",desc:"משחק אסטרטגיה — צברו 30 נקודות אנרגיה לפני המחשב על-ידי הפניית קרני אור.",tags:["אסטרטגיה","אור","WebSim","משחק","לוח"],domains:[]},
+{num:67,name:"ארון האירועים ההיסטוריים העולמיים",link:"https://historical-timeline-explorer--margolin.on.websim.com/",yt:"",desc:"כלי אינטראקטיבי לחקירת ציר זמן עולמי עם סינון לפי קטגוריות ושפה.",tags:["היסטוריה","ציר זמן","WebSim","חקר","עולמי"],domains:[]},
+{num:68,name:"בונה תשבצים באנגלית",link:"https://english-crossword-builder--margolin.on.websim.com/",yt:"",desc:"כלי מקוון ליצירת תשבצים בשפה האנגלית בקלות וביעילות.",tags:["תשבץ","אנגלית","WebSim","משחק","לימוד"],domains:[]},
+{num:69,name:"בונה תשבצים בעברית",link:"https://crosswords--margolin.on.websim.com/",yt:"",desc:"כלי מקוון ליצירת תשבצים בעברית באופן אוטומטי באמצעות AI.",tags:["תשבץ","עברית","WebSim","משחק","לימוד"],domains:[]},
+{num:70,name:"חוזה עתיד — מסייע להציב יעדים",link:"https://lifeforecast-your-personal-future-guide--margolin.on.websim.com/",yt:"",desc:"כלי אינטראקטיבי לתכנון העתיד האישי — מניעים, מטרות, חסמים ויעדים ריאליים.",tags:["יעדים","תכנון","WebSim","אישי","עתיד"],domains:[]},
+{num:71,name:"מחולל לומדות אישיות",link:"https://gemini.google.com/share/d101121f8451",yt:"",desc:"יצירת חומרי למידה מותאמים אישית באופן מיידי — נושא, רמת קושי, ייצוגים.",tags:["לומדות","Gemini","התאמה אישית","חינוך","מיידי"],domains:[]},
+{num:72,name:"תרגול שפה ודיבור עם AI",link:"https://gemini.google.com/share/3d443f373bae",yt:"",desc:"תרגול דיבור חופשי מול AI, תמלול אוטומטי והערכה שפתית.",tags:["דיבור","שפה","Gemini","תמלול","תרגול"],domains:[]},
+{num:73,name:"מעריך שיעורים מקוונים",link:"https://gemini.google.com/gem/48eb2bb2713e?usp=sharing",yt:"",desc:"הערכת איכות שיעורים מקוונים — העלו תמלול וקבלו ניתוח מפורט.",tags:["שיעורים","הערכה","Gem","תמלול","ניתוח"],domains:[]},
+{num:74,name:"יוצר חוברת לימוד מתמלול זום",link:"https://gemini.google.com/gem/13f117e7f3bc",yt:"",desc:"ממיר תמלול של הקלטת זום לחוברת לימוד מסודרת.",tags:["זום","תמלול","Gemini","חוברת לימוד","ממיר"],domains:[]},
+{num:75,name:"יוצר הסרטים",link:"https://gemini.google.com/gem/015647628130?usp=sharing",yt:"",desc:"בוט Gemini ליצירת פרומפטים מפורטים לכלי הפקת סרטים כמו Sora ו-Veo.",tags:["Sora","Veo","Gem","פרומפט","סרטים"],domains:[]},
+{num:76,name:"מהקלטת וידאו על המסך לחוברת לימוד",link:"https://ai.studio/apps/69c69b37-d5de-4fb0-ace0-f985a947414d?fullscreenApplet=true",yt:"",desc:"ממיר הקלטת מסך לחוברת לימוד מפורטת עם צילומי מסך.",tags:["הקלטת מסך","AI Studio","חוברת","לימוד","וידאו"],domains:[]},
+{num:77,name:"מלכידת וידאו לקוד JSON",link:"https://ai.studio/apps/drive/1nl-89s9S50TuE8qYo8iFOSU2Id0lHzkH",yt:"",desc:"הקליטו פעולות מסך וצרו קובץ JSON לאוטומציה של משימות חוזרות.",tags:["וידאו","JSON","AI Studio","אוטומציה","לכידה"],domains:[]},
+{num:78,name:"משכפל אפליקציות באמצעות וידאו",link:"https://ai.studio/apps/drive/1yiAw-QdFJBPbYj-U3Tw8BJCc57KA0smr",yt:"",desc:"שכפול אפליקציות קיימות באמצעות לכידת וידאו של פעולתן.",tags:["שכפול","וידאו","AI Studio","אפליקציות","קוד"],domains:[]},
+{num:79,name:"כותב הסיפורים",link:"https://story-creator-narrator-4--margolin.on.websim.com/",yt:"",desc:"כתיבת סיפורים מותאמים אישית לכל הגילאים, מילדים ועד מבוגרים.",tags:["סיפורים","כתיבה","WebSim","יצירה","גילאים"],domains:[]},
+{num:80,name:"יוצר פרומפטים ללמידה אקטיבית",link:"https://chat-genius-tool.lovable.app/",yt:"",desc:"יצירת פרומפטים מותאמים ללמידה אקטיבית באמצעות מודלי שפה.",tags:["פרומפטים","Lovable","למידה","LLM","אקטיבית"],domains:[]},
+{num:81,name:"יוצר הפרומפטים החכם למורים",link:"https://prompt4canva--margolin.on.websim.com/",yt:"",desc:"יצירת הנחיות מדויקות עבור מודלי שפה שונים בתהליך מונחה.",tags:["פרומפטים","WebSim","מורים","מדויק","כלי"],domains:[]},
+{num:82,name:"דוחס תמונות",link:"https://2mb--margolin.on.websim.com/",yt:"",desc:"הקטנת גודל קבצי תמונה במהירות ובקלות תוך שמירה על איכות.",tags:["דחיסה","תמונות","WebSim","ייעול","2MB"],domains:[]},
+{num:83,name:"פורס קבצי מוזיקה לקטעים שווים",link:"https://audiocutter-3--margolin.on.websim.com/",yt:"",desc:"חיתוך קבצי מוזיקה לקטעים שווים בגודל שתבחרו.",tags:["חיתוך","מוזיקה","WebSim","אודיו","קטעים"],domains:[]},
+{num:84,name:"מערכת חיתוך קבצי אודיו",link:"https://audio-file-cutter--margolin.on.websim.com/",yt:"",desc:"סמנו חלקים בקובץ אודיו והורידו אותם בנפרד.",tags:["אודיו","חיתוך","WebSim","עריכה","סימון"],domains:[]},
+{num:85,name:"מחולל קוד QR",link:"https://qr-code-generator--margolin.on.websim.com/",yt:"",desc:"המרת קישורים לקודי QR בקלות ובמהירות.",tags:["QR","קישורים","WebSim","כלי","המרה"],domains:[]},
+{num:86,name:"המרת אודיו לקישורי השמעה ישירה",link:"https://video2url--margolin.on.websim.com/",yt:"",desc:"המרת קבצי אודיו לקישורים ישירים להשמעה דרך האינטרנט.",tags:["אודיו","קישורים","WebSim","שיתוף","השמעה"],domains:[]},
+{num:87,name:"יוצר בוטים לכיתה",link:"https://ai.studio/apps/drive/1asVXe-QU49cw5Wz59eXdFW5di1FEeZi4",yt:"",desc:"יצירת פרומפטים מפורטים לבוטים מותאמים אישית לשימוש בכיתה.",tags:["בוטים","AI Studio","כיתה","פרומפטים","יצירה"],domains:[]},
+{num:88,name:"ממיר קבצי אודיו",link:"https://audiofilesconverter--margolin.on.websim.com/",yt:"",desc:"המרת פורמטים שונים של קבצי אודיו, כגון WAV ל-MP3.",tags:["המרה","אודיו","WebSim","WAV","MP3"],domains:[]},
+{num:89,name:"ממזג אודיו",link:"https://audio-merger--margolin.on.websim.com/",yt:"",desc:"מיזוג קבצי אודיו שונים לקובץ אחד בקלות ובמהירות.",tags:["מיזוג","אודיו","WebSim","קבצים","מהיר"],domains:[]}
+];
+
+const DOMAIN_MAP={1:'media',2:'edtech',3:'edtech',4:'automation',5:'automation',6:'edtech',7:'creative',8:'media',9:'creative',10:'creative',11:'games',12:'creative',13:'games',14:'creative',15:'games',16:'media',17:'games',18:'creative',19:'creative',20:'edtech',21:'games',22:'games',23:'media',24:'edtech',25:'media',26:'media',27:'media',28:'edtech',29:'edtech',30:'media',31:'edtech',32:'edtech',33:'creative',34:'edtech',35:'automation',36:'creative',37:'automation',38:'creative',39:'edtech',40:'edtech',41:'edtech',42:'creative',43:'media',44:'creative',45:'creative',46:'edtech',47:'edtech',48:'edtech',49:'edtech',50:'games',51:'games',52:'automation',53:'games',54:'media',55:'automation',56:'creative',57:'edtech',58:'edtech',59:'creative',60:'media',61:'automation',62:'creative',63:'games',64:'creative',65:'creative',66:'games',67:'games',68:'games',69:'games',70:'games',71:'edtech',72:'edtech',73:'edtech',74:'edtech',75:'creative',76:'edtech',77:'automation',78:'automation',79:'creative',80:'edtech',81:'automation',82:'media',83:'media',84:'media',85:'media',86:'media',87:'edtech',88:'media',89:'media'};
+const DLABELS={edtech:'AI בחינוך (EDTECH)',media:'עריכת מדיה וכלי עזר',creative:'יצירתיות ובניה יוצרת',automation:'אוטומציה ופיתוח פרומפטים',games:'משחקים ופנאי'};
+
+function getPlatform(link){
+  if(!link)return'other';
+  if(link.includes('ai.studio'))return'aistudio';
+  if(link.includes('gemini.google.com/gem'))return'gem';
+  if(link.includes('gemini.google.com'))return'gemini';
+  if(link.includes('websim.com'))return'websim';
+  if(link.includes('lovable.app')||link.includes('chat-genius'))return'lovable';
+  if(link.includes('chatgpt.com'))return'chatgpt';
+  if(link.includes('base44.app'))return'base44';
+  return'other';
+}
+
+function matchQF(a,qf){
+  const tags=(a.tags||[]);
+  switch(qf){
+    case'video':return !!a.yt;
+    case'favs':return favs.has(a.num);
+    default:return true;
+  }
+}
+
+// ── STATE ──
+const DATA_VERSION='4';
+const USERS_KEY='pm_users';
+const SESSION_KEY='pm_session';
+let apps=[], favs=new Set(), activeDomains=new Set(), activePlatforms=new Set(), activeQFs=new Set(), activeTag='', sortMode='desc', q='';
+let users=[], currentUser=null;
+
+(function init(){
+  if(localStorage.getItem('pm_ver')!==DATA_VERSION){localStorage.removeItem('pm_apps');localStorage.setItem('pm_ver',DATA_VERSION);}
+  const s=localStorage.getItem('pm_apps');
+  apps=s?JSON.parse(s):INITIAL_APPS.map(a=>({...a,domain:DOMAIN_MAP[a.num]||''}));
+  if(!s)saveApps();
+  // load users
+  const su=localStorage.getItem(USERS_KEY);
+  users=su?JSON.parse(su):[];
+  // restore session
+  const sess=localStorage.getItem(SESSION_KEY);
+  if(sess){
+    const {userId}=JSON.parse(sess);
+    const u=users.find(x=>x.id===userId);
+    if(u){currentUser=u;favs=new Set(u.favs||[]);}
+  }
+  if(!currentUser){
+    const sf=localStorage.getItem('pm_favs');
+    favs=new Set(sf?JSON.parse(sf):[]);
+  }
+  updateSidebarCounts();
+  render();
+})();
+
+function saveApps(){localStorage.setItem('pm_apps',JSON.stringify(apps));}
+function saveUsers(){localStorage.setItem(USERS_KEY,JSON.stringify(users));}
+function saveFavs(){
+  if(currentUser){
+    currentUser.favs=[...favs];
+    const idx=users.findIndex(u=>u.id===currentUser.id);
+    if(idx>=0)users[idx]=currentUser;
+    saveUsers();
+  } else {
+    localStorage.setItem('pm_favs',JSON.stringify([...favs]));
+  }
+}
+
+// ── RENDER ──
+function render(){
+  const sq=q.trim().toLowerCase();
+  let list=apps.filter(a=>{
+    const dom=a.domain||DOMAIN_MAP[a.num]||'';
+    const plat=getPlatform(a.link);
+    if(activeDomains.size>0&&!activeDomains.has(dom))return false;
+    if(activePlatforms.size>0&&!activePlatforms.has(plat))return false;
+    if(activeQFs.size>0&&![...activeQFs].every(qf=>matchQF(a,qf)))return false;
+    if(activeTag&&!(a.tags||[]).includes(activeTag))return false;
+    if(!sq)return true;
+    return String(a.num).includes(sq)||(a.name||'').toLowerCase().includes(sq)||(a.desc||'').toLowerCase().includes(sq)||(a.tags||[]).some(t=>t.toLowerCase().includes(sq));
+  });
+
+  if(sortMode==='alpha')list.sort((a,b)=>(a.name||'').localeCompare(b.name||'','he'));
+  else list.sort((a,b)=>b.num-a.num);
+
+  g('appsCount').textContent=list.length;
+  const ac2=g('appsCount2');if(ac2)ac2.textContent=list.length;
+
+  const totalActive=activeDomains.size+activePlatforms.size+activeQFs.size+(activeTag?1:0)+(q.trim()?1:0);
+  const cb=g('clearFiltersBtn');if(cb)cb.style.display=totalActive>0?'inline-block':'none';
+
+  updateSidebarCounts();
+  renderPopularTags(list);
+  renderUserSection();
+
+  if(!list.length){g('grid').innerHTML='<div class="empty">לא נמצאו יישומים תואמים...</div>';return;}
+  g('grid').innerHTML=list.map((a,i)=>cardHTML(a,i)).join('');
+}
+
+function cardHTML(a,idx){
+  const isFav=favs.has(a.num);
+  const domain=a.domain||DOMAIN_MAP[a.num]||'';
+  const numStr=String(idx+1).padStart(2,'0');
+  const tags=(a.tags||[]).filter(Boolean);
+  const rawDesc=a.desc||'';
+  const desc=rawDesc.length>140?rawDesc.slice(0,140)+'…':rawDesc;
+  return `<div class="app-card">
+    <div class="card-admin-ovl">
+      <button class="abtn abtn-e" onclick="openEdit(${a.num})">ערוך</button>
+      <button class="abtn abtn-d" onclick="delApp(${a.num})">מחק</button>
+    </div>
+    <div class="card-num-strip">
+      <span class="card-num-text">${numStr}</span>
+    </div>
+    <div class="card-content">
+      <div class="card-top-row">
+        <span class="domain-badge">${esc(DLABELS[domain]||domain)}</span>
+        <button class="fav-btn-card${isFav?' on':''}" onclick="toggleFav(${a.num},event)">${isFav?'♥':'♡'}</button>
+      </div>
+      <div class="card-name">${esc(a.name||'')}</div>
+      ${desc?`<p class="card-desc-text">${esc(desc)}</p>`:''}
+      ${tags.length?`<div class="card-tags-row">${tags.map(t=>`<span class="card-tag">${esc(t)}</span>`).join('')}</div>`:''}
+    </div>
+    <div class="card-actions">
+      ${a.yt?`<button class="btn-yt-card" onclick="openVideo('${ytId(a.yt)}')">▶ סרטון</button>`:''}
+      <a class="btn-open-card" href="${esc(a.link)}" target="_blank" rel="noopener">פתח ←</a>
+    </div>
+  </div>`;
+}
+
+function renderPopularTags(filteredList){
+  const freq={};
+  filteredList.forEach(a=>(a.tags||[]).forEach(t=>{freq[t]=(freq[t]||0)+1;}));
+  const top12=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,12).map(([t])=>t);
+  const el=g('popularTagsContainer');
+  if(!el)return;
+  el.innerHTML=top12.map(t=>`<button class="sb-tag${activeTag===t?' active':''}" onclick="setActiveTag(${JSON.stringify(t)})">${esc(t)}</button>`).join('');
+}
+
+function setActiveTag(tag){
+  activeTag=activeTag===tag?'':tag;
+  render();
+}
+
+// ── SEARCH ──
+function onSearch(){
+  q=g('searchIn').value;
+  render();
+}
+
+// ── FILTER TOGGLES ──
+function toggleSbDomain(d,cb){cb.checked?activeDomains.add(d):activeDomains.delete(d);render();}
+function togglePlatform(p,cb){cb.checked?activePlatforms.add(p):activePlatforms.delete(p);render();}
+function toggleQF(qf,cb){cb.checked?activeQFs.add(qf):activeQFs.delete(qf);render();}
+function setSort(v){sortMode=v;render();}
+
+function clearAllFilters(){
+  activeDomains.clear();activePlatforms.clear();activeQFs.clear();activeTag='';q='';
+  const si=g('searchIn');if(si)si.value='';
+  document.querySelectorAll('#filter-sidebar input[type="checkbox"]').forEach(c=>c.checked=false);
+  const defR=document.querySelector('#filter-sidebar input[name="sortR"][value="desc"]');
+  if(defR){defR.checked=true;sortMode='desc';}
+  render();
+}
+
+function toggleMobileSidebar(){
+  const sb=g('filter-sidebar'),ov=g('sbOverlay');
+  sb.classList.toggle('open');ov.classList.toggle('open');
+  document.body.style.overflow=sb.classList.contains('open')?'hidden':'';
+}
+
+function updateSidebarCounts(){
+  ['edtech','media','creative','automation','games'].forEach(d=>{
+    const el=g('sb-cnt-'+d);
+    if(el)el.textContent=apps.filter(a=>(a.domain||DOMAIN_MAP[a.num]||'')===d).length;
+  });
+  ['aistudio','gem','gemini','websim','chatgpt','lovable','base44'].forEach(p=>{
+    const el=g('sb-cnt-'+p);
+    if(el)el.textContent=apps.filter(a=>getPlatform(a.link)===p).length;
+  });
+  const vEl=g('cnt-q-video');if(vEl)vEl.textContent=apps.filter(a=>!!a.yt).length;
+  const fEl=g('cnt-q-favs');if(fEl)fEl.textContent=favs.size;
+}
+
+// ── FAVORITES ──
+function toggleFav(num,e){
+  e.stopPropagation();
+  if(favs.has(num))favs.delete(num);else favs.add(num);
+  saveFavs();
+  render();
+  toast(favs.has(num)?'♥ נוסף למועדפים':'♡ הוסר ממועדפים');
+}
+
+// ── ADMIN ACCESS ──
+function openGear(){g('pwInput').value='';g('pwErr').textContent='';g('pwOverlay').classList.add('open');setTimeout(()=>g('pwInput').focus(),100);}
+function closePw(){g('pwOverlay').classList.remove('open');}
+function checkPw(){
+  if(g('pwInput').value===ADMIN_PW){closePw();openAdmin();}
+  else{g('pwErr').textContent='❌ סיסמה שגויה';g('pwInput').value='';g('pwInput').focus();}
+}
+
+// ── ADMIN ──
+function openAdmin(){document.body.classList.add('admin-mode');renderAdmTable();renderUsersTable();g('adminPanel').classList.add('open');document.body.style.overflow='hidden';}
+function closeAdmin(){document.body.classList.remove('admin-mode');g('adminPanel').classList.remove('open');document.body.style.overflow='';render();}
+function renderAdmTable(){
+  const sq=(g('admSearch').value||'').toLowerCase();
+  const list=apps.filter(a=>!sq||String(a.num).includes(sq)||(a.name||'').toLowerCase().includes(sq)).sort((a,b)=>a.num-b.num);
+  g('admCount').textContent=apps.length;
+  g('admBody').innerHTML=list.map(a=>`<tr>
+    <td class="t-num">#${String(a.num).padStart(2,'0')}</td>
+    <td class="t-name">${esc(a.name||'')}</td>
+    <td class="t-link"><a href="${esc(a.link)}" target="_blank">פתח ↗</a></td>
+    <td>${a.yt?`<a href="${esc(a.yt)}" target="_blank">▶</a>`:'-'}</td>
+    <td><button class="tb tb-e" onclick="openEdit(${a.num})">ערוך</button><button class="tb tb-d" onclick="delApp(${a.num})">מחק</button></td>
+  </tr>`).join('');
+}
+
+// ── EDIT ──
+function openAddNew(){clearForm();g('editTitle').innerHTML='יישום חדש <button class="mclose" onclick="closeEdit()">✕</button>';g('editOverlay').classList.add('open');}
+function openEdit(num){
+  const a=apps.find(x=>x.num===num);if(!a)return;
+  clearForm();
+  g('eId').value=num;g('eNum').value=a.num;g('eName').value=a.name||'';
+  g('eDesc').value=a.desc||'';g('eLink').value=a.link||'';g('eYt').value=a.yt||'';
+  g('eTags').value=(a.tags||[]).join(', ');g('eDoms').value=(a.domains||[]).join(', ');
+  g('editTitle').innerHTML=`עריכת יישום #${num} <button class="mclose" onclick="closeEdit()">✕</button>`;
+  g('editOverlay').classList.add('open');
+}
+function closeEdit(){g('editOverlay').classList.remove('open');}
+function clearForm(){['eId','eNum','eName','eDesc','eLink','eYt','eTags','eDoms'].forEach(id=>g(id).value='');}
+function saveApp(){
+  const num=parseInt(g('eNum').value),name=g('eName').value.trim(),link=g('eLink').value.trim();
+  if(!num||!name||!link){toast('⚠️ מספר, שם וקישור הם שדות חובה');return;}
+  const app={num,name,link,yt:g('eYt').value.trim(),desc:g('eDesc').value.trim(),
+    tags:g('eTags').value.split(',').map(s=>s.trim()).filter(Boolean),
+    domains:g('eDoms').value.split(',').map(s=>s.trim()).filter(Boolean),
+    domain:DOMAIN_MAP[num]||''};
+  const idx=apps.findIndex(a=>a.num===num);
+  if(idx>=0)apps[idx]=app;else apps.push(app);
+  apps.sort((a,b)=>a.num-b.num);
+  saveApps();closeEdit();renderAdmTable();toast('✅ נשמר בהצלחה');render();
+}
+function delApp(num){
+  const a=apps.find(x=>x.num===num);
+  if(!confirm(`למחוק את יישום #${num} — "${a?.name}"?`))return;
+  apps=apps.filter(x=>x.num!==num);
+  saveApps();renderAdmTable();toast('🗑️ נמחק');render();
+}
+
+// ── EXCEL IMPORT ──
+async function importExcel(input){
+  const file=input.files[0];if(!file)return;
+  const msg=g('importMsg');msg.className='import-msg';msg.textContent='מייבא...';
+  try{
+    const data=await file.arrayBuffer();
+    const wb=XLSX.read(data);
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    let count=0;
+    for(let i=1;i<rows.length;i++){
+      const r=rows[i];if(!r[0]&&!r[1])continue;
+      const num=parseInt(r[0])||(apps.length+1);
+      const app={num,name:String(r[1]||'').trim(),link:String(r[2]||'').trim(),yt:String(r[3]||'').trim(),
+        desc:String(r[4]||'').trim(),
+        tags:r[5]?String(r[5]).split(',').map(s=>s.trim()).filter(Boolean):[],
+        domains:r[6]?String(r[6]).split(',').map(s=>s.trim()).filter(Boolean):[],
+        domain:DOMAIN_MAP[num]||''};
+      if(!app.name&&!app.link)continue;
+      const idx=apps.findIndex(a=>a.num===num);
+      if(idx>=0)apps[idx]=app;else apps.push(app);
+      count++;
+    }
+    apps.sort((a,b)=>a.num-b.num);
+    saveApps();renderAdmTable();render();
+    msg.className='import-msg ok';msg.textContent=`✅ יובאו ${count} יישומים בהצלחה!`;
+  }catch(e){msg.className='import-msg err';msg.textContent='❌ שגיאה: '+e.message;}
+  input.value='';
+}
+
+// ── VIDEO ──
+function ytId(url){if(!url)return'';const m=url.match(/(?:youtu\.be\/|[?&]v=|\/v\/|embed\/)([A-Za-z0-9_-]{11})/);return m?m[1]:'';}
+function openVideo(vid){if(!vid)return;g('vidFrame').src=`https://www.youtube.com/embed/${vid}?autoplay=1`;g('videoOverlay').classList.add('open');}
+function closeVideo(){g('vidFrame').src='';g('videoOverlay').classList.remove('open');}
+
+// ── AUTH HEADER SECTION ──
+function renderUserSection(){
+  const el=g('hdrAuth');if(!el)return;
+  if(currentUser){
+    el.innerHTML=`<span class="hdr-user-name">שלום, ${esc(currentUser.email.split('@')[0])}</span>
+      <button class="btn-auth" onclick="doLogout()">התנתק</button>`;
+  } else {
+    el.innerHTML=`<button class="btn-auth" onclick="openLogin()">כניסה</button>
+      <button class="btn-auth signup" onclick="openRegister()">הרשמה</button>`;
+  }
+}
+
+// ── REGISTER ──
+function openRegister(){
+  g('regEmail').value='';g('regPw').value='';g('regPw2').value='';g('regErr').textContent='';
+  g('registerOv').classList.add('open');setTimeout(()=>g('regEmail').focus(),80);
+}
+function closeRegister(){g('registerOv').classList.remove('open');}
+function doRegister(){
+  const email=g('regEmail').value.trim().toLowerCase();
+  const pw=g('regPw').value;
+  const pw2=g('regPw2').value;
+  const err=g('regErr');
+  if(!email||!email.includes('@')){err.textContent='נא להזין כתובת מייל תקינה';return;}
+  if(pw.length<4){err.textContent='הסיסמה חייבת להכיל לפחות 4 תווים';return;}
+  if(pw!==pw2){err.textContent='הסיסמאות אינן תואמות';return;}
+  if(users.find(u=>u.email===email)){err.textContent='כתובת המייל כבר רשומה במערכת';return;}
+  const newUser={id:Date.now(),email,password:pw,favs:[...favs],created:new Date().toLocaleDateString('he-IL')};
+  users.push(newUser);
+  saveUsers();
+  currentUser=newUser;
+  localStorage.setItem(SESSION_KEY,JSON.stringify({userId:newUser.id}));
+  closeRegister();
+  toast('✅ נרשמת בהצלחה! ברוך הבא');
+  render();
+}
+
+// ── LOGIN ──
+function openLogin(){
+  g('loginEmail').value='';g('loginPw').value='';g('loginErr').textContent='';
+  g('loginOv').classList.add('open');setTimeout(()=>g('loginEmail').focus(),80);
+}
+function closeLogin(){g('loginOv').classList.remove('open');}
+function doLogin(){
+  const email=g('loginEmail').value.trim().toLowerCase();
+  const pw=g('loginPw').value;
+  const err=g('loginErr');
+  const u=users.find(x=>x.email===email&&x.password===pw);
+  if(!u){err.textContent='מייל או סיסמה שגויים';return;}
+  currentUser=u;
+  favs=new Set(u.favs||[]);
+  localStorage.setItem(SESSION_KEY,JSON.stringify({userId:u.id}));
+  closeLogin();
+  toast('👋 ברוך הבא, '+u.email.split('@')[0]);
+  render();
+}
+
+// ── LOGOUT ──
+function doLogout(){
+  currentUser=null;
+  localStorage.removeItem(SESSION_KEY);
+  const sf=localStorage.getItem('pm_favs');
+  favs=new Set(sf?JSON.parse(sf):[]);
+  toast('התנתקת בהצלחה');
+  render();
+}
+
+// ── FORGOT PASSWORD ──
+function openForgot(){
+  g('fgtEmail').value='';g('fgtPw').value='';g('fgtErr').textContent='';
+  g('forgotOv').classList.add('open');setTimeout(()=>g('fgtEmail').focus(),80);
+}
+function closeForgot(){g('forgotOv').classList.remove('open');}
+function doForgot(){
+  const email=g('fgtEmail').value.trim().toLowerCase();
+  const pw=g('fgtPw').value;
+  const err=g('fgtErr');
+  if(!email||!email.includes('@')){err.textContent='נא להזין כתובת מייל תקינה';return;}
+  if(pw.length<4){err.textContent='הסיסמה חייבת להכיל לפחות 4 תווים';return;}
+  const idx=users.findIndex(u=>u.email===email);
+  if(idx<0){err.textContent='לא נמצא חשבון עם כתובת מייל זו';return;}
+  users[idx].password=pw;
+  saveUsers();
+  closeForgot();
+  toast('✅ הסיסמה עודכנה — ניתן להתחבר');
+}
+
+// ── ADMIN USERS TABLE ──
+function renderUsersTable(){
+  const uc=g('usersCount');if(uc)uc.textContent=users.length;
+  const tbody=g('usersBody');if(!tbody)return;
+  if(!users.length){tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#aaa;padding:20px">אין משתמשים רשומים</td></tr>';return;}
+  tbody.innerHTML=users.map(u=>`<tr>
+    <td class="t-name">${esc(u.email)}</td>
+    <td style="text-align:center">${(u.favs||[]).length}</td>
+    <td style="font-size:.75rem;color:#9b9590">${u.created||'-'}</td>
+    <td>
+      <button class="tb tb-e" onclick="adminResetPw(${u.id})">אפס סיסמה</button>
+      <button class="tb tb-d" onclick="adminDelUser(${u.id})">מחק</button>
+    </td>
+  </tr>`).join('');
+}
+function adminResetPw(id){
+  const u=users.find(x=>x.id===id);if(!u)return;
+  const np=prompt(`סיסמה חדשה עבור ${u.email}:`);
+  if(!np||np.length<4){alert('סיסמה חייבת להכיל לפחות 4 תווים');return;}
+  u.password=np;saveUsers();toast('✅ סיסמה עודכנה');renderUsersTable();
+}
+function adminDelUser(id){
+  const u=users.find(x=>x.id===id);if(!u)return;
+  if(!confirm(`למחוק את המשתמש ${u.email}?`))return;
+  if(currentUser&&currentUser.id===id)doLogout();
+  users=users.filter(x=>x.id!==id);
+  saveUsers();renderUsersTable();toast('🗑️ משתמש נמחק');
+}
+
+// ── KEYBOARD ──
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeVideo();closeEdit();closePw();closeRegister();closeLogin();closeForgot();}
+});
+
+// ── UTILS ──
+function g(id){return document.getElementById(id);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+let tTimer;
+function toast(msg){const t=g('toast');t.textContent=msg;t.classList.add('show');clearTimeout(tTimer);tTimer=setTimeout(()=>t.classList.remove('show'),2400);}
+</script>
+</body>
+</html>
