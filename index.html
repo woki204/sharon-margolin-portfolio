@@ -6,6 +6,9 @@
 <title>Sharon Margolin — Portfolio</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Heebo',sans-serif;direction:rtl;background:#ece6de;color:#1a1a1a;min-height:100vh}
@@ -351,11 +354,10 @@ html{scroll-behavior:smooth}
 <div class="auth-ov" id="forgotOv">
 <div class="auth-box">
     <h3>איפוס סיסמה</h3>
-    <p class="auth-sub">הזן את המייל שלך ובחר סיסמה חדשה</p>
-    <div class="auth-fld"><label>כתובת מייל</label><input type="email" id="fgtEmail" placeholder="you@example.com"></div>
-    <div class="auth-fld"><label>סיסמה חדשה</label><input type="password" id="fgtPw" placeholder="לפחות 4 תווים"></div>
+    <p class="auth-sub">הזן את המייל שלך ונשלח לך קישור לאיפוס הסיסמה</p>
+    <div class="auth-fld"><label>כתובת מייל</label><input type="email" id="fgtEmail" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doForgot()"></div>
     <div class="auth-err" id="fgtErr"></div>
-    <button class="auth-btn" onclick="doForgot()">עדכן סיסמה</button>
+    <button class="auth-btn" onclick="doForgot()">שלח קישור לאיפוס</button>
     <div class="auth-foot">
       <button onclick="closeForgot();openLogin()">חזרה לכניסה</button>
       <button onclick="closeForgot()">ביטול</button>
@@ -395,7 +397,7 @@ html{scroll-behavior:smooth}
       <h3>ניהול משתמשים <span id="usersCount" style="color:#8b1a1a;font-family:'Playfair Display',serif"></span></h3>
       <div style="overflow-x:auto">
         <table class="adm-tbl">
-          <thead><tr><th>מייל</th><th>מועדפים</th><th>נרשם</th><th>פעולות</th></tr></thead>
+          <thead><tr><th>מייל</th><th>מועדפים</th><th>נרשם</th></tr></thead>
           <tbody id="usersBody"></tbody>
         </table>
       </div>
@@ -562,46 +564,93 @@ function matchQF(a,qf){
 }
 
 // ── STATE ──
-const DATA_VERSION='4';
-const USERS_KEY='pm_users';
-const SESSION_KEY='pm_session';
 let apps=[], favs=new Set(), activeDomains=new Set(), activePlatforms=new Set(), activeQFs=new Set(), activeTag='', sortMode='desc', q='';
-let users=[], currentUser=null;
+let currentUser=null;
+let _auth=null, _db=null;
+
+// ── FIREBASE CONFIG ──
+const FB_CONFIG={
+  apiKey:"AIzaSyDOpyzVs2XKi2QRxLnpEUu3rM7A0VO1N80",
+  authDomain:"eduai-planner-1b6ac.firebaseapp.com",
+  projectId:"eduai-planner-1b6ac",
+  storageBucket:"eduai-planner-1b6ac.firebasestorage.app",
+  messagingSenderId:"821536586016",
+  appId:"1:821536586016:web:fb0452985ba41563daff45"
+};
 
 (function init(){
-  if(localStorage.getItem('pm_ver')!==DATA_VERSION){localStorage.removeItem('pm_apps');localStorage.setItem('pm_ver',DATA_VERSION);}
-  const s=localStorage.getItem('pm_apps');
-  apps=s?JSON.parse(s):INITIAL_APPS.map(a=>({...a,domain:DOMAIN_MAP[a.num]||''}));
-  if(!s)saveApps();
-  // load users
-  const su=localStorage.getItem(USERS_KEY);
-  users=su?JSON.parse(su):[];
-  // restore session
-  const sess=localStorage.getItem(SESSION_KEY);
-  if(sess){
-    const {userId}=JSON.parse(sess);
-    const u=users.find(x=>x.id===userId);
-    if(u){currentUser=u;favs=new Set(u.favs||[]);}
-  }
-  if(!currentUser){
-    const sf=localStorage.getItem('pm_favs');
-    favs=new Set(sf?JSON.parse(sf):[]);
-  }
+  // Show apps immediately from INITIAL_APPS while Firestore loads
+  apps=INITIAL_APPS.map(a=>({...a,domain:DOMAIN_MAP[a.num]||''}));
   updateSidebarCounts();
   render();
+
+  // Initialize Firebase
+  firebase.initializeApp(FB_CONFIG);
+  _auth=firebase.auth();
+  _db=firebase.firestore();
+
+  // Load apps from Firestore (overwrites local seed if data exists)
+  _db.collection('apps').orderBy('num').get().then(snap=>{
+    if(snap.empty){
+      // First time: seed from INITIAL_APPS
+      _saveAllAppsToFirestore();
+    } else {
+      apps=snap.docs.map(d=>d.data());
+      apps.sort((a,b)=>a.num-b.num);
+      updateSidebarCounts();
+      render();
+    }
+  }).catch(e=>console.warn('Firestore apps load error:',e));
+
+  // Auth state listener — fires when login/logout changes
+  _auth.onAuthStateChanged(async fbUser=>{
+    if(fbUser){
+      currentUser=fbUser;
+      try{
+        const doc=await _db.collection('users').doc(fbUser.uid).get();
+        favs=new Set(doc.exists?(doc.data().favs||[]):[]);
+      }catch(e){favs=new Set();}
+    } else {
+      currentUser=null;
+      const sf=localStorage.getItem('pm_favs');
+      favs=new Set(sf?JSON.parse(sf):[]);
+    }
+    updateSidebarCounts();
+    render();
+  });
 })();
 
-function saveApps(){localStorage.setItem('pm_apps',JSON.stringify(apps));}
-function saveUsers(){localStorage.setItem(USERS_KEY,JSON.stringify(users));}
-function saveFavs(){
-  if(currentUser){
-    currentUser.favs=[...favs];
-    const idx=users.findIndex(u=>u.id===currentUser.id);
-    if(idx>=0)users[idx]=currentUser;
-    saveUsers();
+async function _saveAllAppsToFirestore(){
+  if(!_db)return;
+  try{
+    const CHUNK=400;
+    for(let i=0;i<apps.length;i+=CHUNK){
+      const batch=_db.batch();
+      apps.slice(i,i+CHUNK).forEach(app=>{
+        batch.set(_db.collection('apps').doc(String(app.num)),app);
+      });
+      await batch.commit();
+    }
+  }catch(e){console.warn('Firestore seed error:',e);}
+}
+
+async function saveApps(){await _saveAllAppsToFirestore();}
+
+async function saveFavs(){
+  if(currentUser&&_db){
+    try{await _db.collection('users').doc(currentUser.uid).set({favs:[...favs]},{merge:true});}
+    catch(e){console.warn('saveFavs error:',e);}
   } else {
     localStorage.setItem('pm_favs',JSON.stringify([...favs]));
   }
+}
+
+function firebaseErrMsg(code){
+  const m={'auth/email-already-in-use':'כתובת המייל כבר רשומה','auth/invalid-email':'כתובת מייל לא תקינה',
+    'auth/weak-password':'הסיסמה חייבת להכיל לפחות 6 תווים','auth/user-not-found':'לא נמצא חשבון עם מייל זה',
+    'auth/wrong-password':'סיסמה שגויה','auth/invalid-credential':'מייל או סיסמה שגויים',
+    'auth/too-many-requests':'יותר מדי ניסיונות — נסה שוב מאוחר יותר'};
+  return m[code]||'שגיאה ('+code+')';
 }
 
 // ── RENDER ──
@@ -766,7 +815,7 @@ function openEdit(num){
 }
 function closeEdit(){g('editOverlay').classList.remove('open');}
 function clearForm(){['eId','eNum','eName','eDesc','eLink','eYt','eTags','eDoms'].forEach(id=>g(id).value='');}
-function saveApp(){
+async function saveApp(){
   const num=parseInt(g('eNum').value),name=g('eName').value.trim(),link=g('eLink').value.trim();
   if(!num||!name||!link){toast('⚠️ מספר, שם וקישור הם שדות חובה');return;}
   const app={num,name,link,yt:g('eYt').value.trim(),desc:g('eDesc').value.trim(),
@@ -776,13 +825,15 @@ function saveApp(){
   const idx=apps.findIndex(a=>a.num===num);
   if(idx>=0)apps[idx]=app;else apps.push(app);
   apps.sort((a,b)=>a.num-b.num);
-  saveApps();closeEdit();renderAdmTable();toast('✅ נשמר בהצלחה');render();
+  if(_db){try{await _db.collection('apps').doc(String(num)).set(app);}catch(e){console.warn(e);}}
+  closeEdit();renderAdmTable();toast('✅ נשמר בהצלחה');render();
 }
-function delApp(num){
+async function delApp(num){
   const a=apps.find(x=>x.num===num);
   if(!confirm(`למחוק את יישום #${num} — "${a?.name}"?`))return;
   apps=apps.filter(x=>x.num!==num);
-  saveApps();renderAdmTable();toast('🗑️ נמחק');render();
+  if(_db){try{await _db.collection('apps').doc(String(num)).delete();}catch(e){console.warn(e);}}
+  renderAdmTable();toast('🗑️ נמחק');render();
 }
 
 // ── EXCEL IMPORT ──
@@ -809,7 +860,7 @@ async function importExcel(input){
       count++;
     }
     apps.sort((a,b)=>a.num-b.num);
-    saveApps();renderAdmTable();render();
+    await saveApps();renderAdmTable();render();
     msg.className='import-msg ok';msg.textContent=`✅ יובאו ${count} יישומים בהצלחה!`;
   }catch(e){msg.className='import-msg err';msg.textContent='❌ שגיאה: '+e.message;}
   input.value='';
@@ -838,23 +889,23 @@ function openRegister(){
   g('registerOv').classList.add('open');setTimeout(()=>g('regEmail').focus(),80);
 }
 function closeRegister(){g('registerOv').classList.remove('open');}
-function doRegister(){
+async function doRegister(){
   const email=g('regEmail').value.trim().toLowerCase();
   const pw=g('regPw').value;
   const pw2=g('regPw2').value;
   const err=g('regErr');
   if(!email||!email.includes('@')){err.textContent='נא להזין כתובת מייל תקינה';return;}
-  if(pw.length<4){err.textContent='הסיסמה חייבת להכיל לפחות 4 תווים';return;}
+  if(pw.length<6){err.textContent='הסיסמה חייבת להכיל לפחות 6 תווים';return;}
   if(pw!==pw2){err.textContent='הסיסמאות אינן תואמות';return;}
-  if(users.find(u=>u.email===email)){err.textContent='כתובת המייל כבר רשומה במערכת';return;}
-  const newUser={id:Date.now(),email,password:pw,favs:[...favs],created:new Date().toLocaleDateString('he-IL')};
-  users.push(newUser);
-  saveUsers();
-  currentUser=newUser;
-  localStorage.setItem(SESSION_KEY,JSON.stringify({userId:newUser.id}));
-  closeRegister();
-  toast('✅ נרשמת בהצלחה! ברוך הבא');
-  render();
+  err.textContent='';
+  try{
+    const cred=await _auth.createUserWithEmailAndPassword(email,pw);
+    await _db.collection('users').doc(cred.user.uid).set({
+      email,favs:[...favs],created:new Date().toLocaleDateString('he-IL')
+    });
+    closeRegister();
+    toast('✅ נרשמת בהצלחה! ברוך הבא');
+  }catch(e){err.textContent=firebaseErrMsg(e.code);}
 }
 
 // ── LOGIN ──
@@ -863,77 +914,60 @@ function openLogin(){
   g('loginOv').classList.add('open');setTimeout(()=>g('loginEmail').focus(),80);
 }
 function closeLogin(){g('loginOv').classList.remove('open');}
-function doLogin(){
+async function doLogin(){
   const email=g('loginEmail').value.trim().toLowerCase();
   const pw=g('loginPw').value;
   const err=g('loginErr');
-  const u=users.find(x=>x.email===email&&x.password===pw);
-  if(!u){err.textContent='מייל או סיסמה שגויים';return;}
-  currentUser=u;
-  favs=new Set(u.favs||[]);
-  localStorage.setItem(SESSION_KEY,JSON.stringify({userId:u.id}));
-  closeLogin();
-  toast('👋 ברוך הבא, '+u.email.split('@')[0]);
-  render();
+  err.textContent='';
+  try{
+    await _auth.signInWithEmailAndPassword(email,pw);
+    closeLogin();
+    toast('👋 ברוך הבא, '+email.split('@')[0]);
+  }catch(e){err.textContent=firebaseErrMsg(e.code);}
 }
 
 // ── LOGOUT ──
 function doLogout(){
-  currentUser=null;
-  localStorage.removeItem(SESSION_KEY);
-  const sf=localStorage.getItem('pm_favs');
-  favs=new Set(sf?JSON.parse(sf):[]);
+  _auth.signOut();
   toast('התנתקת בהצלחה');
-  render();
 }
 
 // ── FORGOT PASSWORD ──
 function openForgot(){
-  g('fgtEmail').value='';g('fgtPw').value='';g('fgtErr').textContent='';
+  g('fgtEmail').value='';g('fgtErr').textContent='';
   g('forgotOv').classList.add('open');setTimeout(()=>g('fgtEmail').focus(),80);
 }
 function closeForgot(){g('forgotOv').classList.remove('open');}
-function doForgot(){
+async function doForgot(){
   const email=g('fgtEmail').value.trim().toLowerCase();
-  const pw=g('fgtPw').value;
   const err=g('fgtErr');
   if(!email||!email.includes('@')){err.textContent='נא להזין כתובת מייל תקינה';return;}
-  if(pw.length<4){err.textContent='הסיסמה חייבת להכיל לפחות 4 תווים';return;}
-  const idx=users.findIndex(u=>u.email===email);
-  if(idx<0){err.textContent='לא נמצא חשבון עם כתובת מייל זו';return;}
-  users[idx].password=pw;
-  saveUsers();
-  closeForgot();
-  toast('✅ הסיסמה עודכנה — ניתן להתחבר');
+  err.textContent='';
+  try{
+    await _auth.sendPasswordResetEmail(email);
+    closeForgot();
+    toast('✅ נשלח מייל לאיפוס סיסמה — בדוק את תיבת הדואר שלך');
+  }catch(e){err.textContent=firebaseErrMsg(e.code);}
 }
 
 // ── ADMIN USERS TABLE ──
-function renderUsersTable(){
-  const uc=g('usersCount');if(uc)uc.textContent=users.length;
+async function renderUsersTable(){
+  const uc=g('usersCount');
   const tbody=g('usersBody');if(!tbody)return;
-  if(!users.length){tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#aaa;padding:20px">אין משתמשים רשומים</td></tr>';return;}
-  tbody.innerHTML=users.map(u=>`<tr>
-    <td class="t-name">${esc(u.email)}</td>
-    <td style="text-align:center">${(u.favs||[]).length}</td>
-    <td style="font-size:.75rem;color:#9b9590">${u.created||'-'}</td>
-    <td>
-      <button class="tb tb-e" onclick="adminResetPw(${u.id})">אפס סיסמה</button>
-      <button class="tb tb-d" onclick="adminDelUser(${u.id})">מחק</button>
-    </td>
-  </tr>`).join('');
-}
-function adminResetPw(id){
-  const u=users.find(x=>x.id===id);if(!u)return;
-  const np=prompt(`סיסמה חדשה עבור ${u.email}:`);
-  if(!np||np.length<4){alert('סיסמה חייבת להכיל לפחות 4 תווים');return;}
-  u.password=np;saveUsers();toast('✅ סיסמה עודכנה');renderUsersTable();
-}
-function adminDelUser(id){
-  const u=users.find(x=>x.id===id);if(!u)return;
-  if(!confirm(`למחוק את המשתמש ${u.email}?`))return;
-  if(currentUser&&currentUser.id===id)doLogout();
-  users=users.filter(x=>x.id!==id);
-  saveUsers();renderUsersTable();toast('🗑️ משתמש נמחק');
+  if(!_db){tbody.innerHTML='<tr><td colspan="3" style="text-align:center;color:#aaa;padding:20px">מחבר...</td></tr>';return;}
+  try{
+    const snap=await _db.collection('users').get();
+    if(uc)uc.textContent=snap.size;
+    if(!snap.size){tbody.innerHTML='<tr><td colspan="3" style="text-align:center;color:#aaa;padding:20px">אין משתמשים רשומים</td></tr>';return;}
+    tbody.innerHTML=snap.docs.map(d=>{
+      const u=d.data();
+      return `<tr>
+        <td class="t-name">${esc(u.email||d.id)}</td>
+        <td style="text-align:center">${(u.favs||[]).length}</td>
+        <td style="font-size:.75rem;color:#9b9590">${u.created||'-'}</td>
+      </tr>`;
+    }).join('');
+  }catch(e){tbody.innerHTML='<tr><td colspan="3" style="text-align:center;color:#e11d48;padding:20px">שגיאה בטעינת משתמשים</td></tr>';}
 }
 
 // ── KEYBOARD ──
