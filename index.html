@@ -165,6 +165,11 @@ html{scroll-behavior:smooth}
 #editOverlay .mclose{margin-right:auto;background:none;border:none;font-size:1.1rem;cursor:pointer;color:#aaa;padding:0 4px}
 #editOverlay .mclose:hover{color:#1a1a1a}
 
+/* ── POPULARITY BADGES ── */
+.pop-badge{display:inline-flex;align-items:center;gap:3px;font-size:.62rem;font-weight:800;padding:2px 8px;border-radius:3px;letter-spacing:.4px;vertical-align:middle;flex-shrink:0}
+.pop-badge.hot{background:#fff3cd;color:#92400e;border:1px solid #fcd34d}
+.pop-badge.rec{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+
 /* ── TOAST ── */
 #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(8px);background:#1a1a1a;color:#fff;padding:10px 22px;font-size:.83rem;font-weight:600;opacity:0;transition:all .28s;z-index:800;pointer-events:none;white-space:nowrap;font-family:'Heebo',sans-serif}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -429,7 +434,7 @@ html{scroll-behavior:smooth}
       <h3>פופולריות יישומים <span style="color:#8b1a1a;font-size:.75rem;font-family:'Heebo',sans-serif;font-weight:400">(לחיצות על "פתח")</span></h3>
       <div style="overflow-x:auto">
         <table class="adm-tbl">
-          <thead><tr><th>#</th><th>שם יישום</th><th>לחיצות</th></tr></thead>
+          <thead><tr><th>#</th><th>שם יישום</th><th>לחיצות</th><th>מועדפים</th><th>ציון</th></tr></thead>
           <tbody id="clicksBody"><tr><td colspan="3" style="text-align:center;color:#aaa;padding:14px">טוען...</td></tr></tbody>
         </table>
       </div>
@@ -609,6 +614,7 @@ function matchQF(a,qf){
 let apps=[], favs=new Set(), activeDomains=new Set(), activePlatforms=new Set(), activeQFs=new Set(), activeTag='', sortMode='desc', q='';
 let currentUser=null;
 let _auth=null, _db=null;
+let popularityMap={}; // num -> {clicks, favs, score}
 
 // ── FIREBASE CONFIG ──
 const FB_CONFIG={
@@ -630,6 +636,9 @@ const FB_CONFIG={
   firebase.initializeApp(FB_CONFIG);
   _auth=firebase.auth();
   _db=firebase.firestore();
+
+  // Load popularity data (clicks + favCounts)
+  loadPopularity();
 
   // Load apps from Firestore (overwrites local seed if data exists)
   _db.collection('apps').orderBy('num').get().then(snap=>{
@@ -661,6 +670,41 @@ const FB_CONFIG={
     render();
   });
 })();
+
+async function loadPopularity(){
+  if(!_db)return;
+  try{
+    const [cSnap,fSnap]=await Promise.all([
+      _db.collection('clicks').get(),
+      _db.collection('favCounts').get()
+    ]);
+    popularityMap={};
+    cSnap.docs.forEach(d=>{
+      const n=parseInt(d.id);
+      if(!popularityMap[n])popularityMap[n]={clicks:0,favs:0};
+      popularityMap[n].clicks=d.data().count||0;
+    });
+    fSnap.docs.forEach(d=>{
+      const n=parseInt(d.id);
+      if(!popularityMap[n])popularityMap[n]={clicks:0,favs:0};
+      popularityMap[n].favs=d.data().count||0;
+    });
+    render();
+  }catch(e){console.warn('loadPopularity error:',e);}
+}
+
+function getScore(num){
+  const p=popularityMap[num];
+  if(!p)return 0;
+  return (p.clicks||0)+(p.favs||0)*3;
+}
+
+function getBadge(num){
+  const s=getScore(num);
+  if(s>=40)return'<span class="pop-badge hot">🔥 פופולרי</span>';
+  if(s>=15)return'<span class="pop-badge rec">✦ מומלץ</span>';
+  return'';
+}
 
 async function _saveAllAppsToFirestore(){
   if(!_db)return;
@@ -743,7 +787,10 @@ function cardHTML(a,idx){
     </div>
     <div class="card-content">
       <div class="card-top-row">
-        <span class="domain-badge">${esc(DLABELS[domain]||domain)}</span>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span class="domain-badge">${esc(DLABELS[domain]||domain)}</span>
+          ${getBadge(a.num)}
+        </div>
         <button class="fav-btn-card${isFav?' on':''}" onclick="toggleFav(${a.num},event)">${isFav?'♥':'♡'}</button>
       </div>
       <div class="card-name">${esc(a.name||'')}</div>
@@ -820,15 +867,29 @@ function openApp(link,num){
     {count:firebase.firestore.FieldValue.increment(1),name:app?.name||'',num},
     {merge:true}
   ).catch(()=>{});
+  // update local map immediately so badge can appear in same session
+  if(!popularityMap[num])popularityMap[num]={clicks:0,favs:0};
+  popularityMap[num].clicks=(popularityMap[num].clicks||0)+1;
 }
 
 // ── FAVORITES ──
 function toggleFav(num,e){
   e.stopPropagation();
   if(favs.has(num))favs.delete(num);else favs.add(num);
+  const added=favs.has(num);
   saveFavs();
+  // track fav count in Firestore
+  if(_db){
+    const inc=added?1:-1;
+    _db.collection('favCounts').doc(String(num)).set(
+      {count:firebase.firestore.FieldValue.increment(inc)},
+      {merge:true}
+    ).catch(()=>{});
+    if(!popularityMap[num])popularityMap[num]={clicks:0,favs:0};
+    popularityMap[num].favs=Math.max(0,(popularityMap[num].favs||0)+inc);
+  }
   render();
-  toast(favs.has(num)?'♥ נוסף למועדפים':'♡ הוסר ממועדפים');
+  toast(added?'♥ נוסף למועדפים':'♡ הוסר ממועדפים');
 }
 
 // ── ADMIN ACCESS ──
@@ -844,17 +905,47 @@ function openAdmin(){document.body.classList.add('admin-mode');renderAdmTable();
 
 async function renderClicksTable(){
   const tbody=g('clicksBody');if(!tbody)return;
-  if(!_db){tbody.innerHTML='<tr><td colspan="3" style="text-align:center;color:#aaa;padding:14px">מחבר...</td></tr>';return;}
+  if(!_db){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#aaa;padding:14px">מחבר...</td></tr>';return;}
   try{
-    const snap=await _db.collection('clicks').get();
-    if(snap.empty){tbody.innerHTML='<tr><td colspan="3" style="text-align:center;color:#aaa;padding:14px">אין נתונים עדיין</td></tr>';return;}
-    const rows=snap.docs.map(d=>d.data()).sort((a,b)=>(b.count||0)-(a.count||0));
-    tbody.innerHTML=rows.map((r,i)=>`<tr>
-      <td class="t-num">${i+1}</td>
-      <td class="t-name">${esc(r.name||'#'+r.num)}</td>
-      <td style="text-align:center;font-weight:700;color:#8b1a1a;font-family:'Playfair Display',serif;font-size:1.05rem">${r.count||0}</td>
-    </tr>`).join('');
-  }catch(e){tbody.innerHTML='<tr><td colspan="3" style="text-align:center;color:#e11d48;padding:14px">שגיאה בטעינה</td></tr>';}
+    const [cSnap,fSnap]=await Promise.all([
+      _db.collection('clicks').get(),
+      _db.collection('favCounts').get()
+    ]);
+    const dataMap={};
+    cSnap.docs.forEach(d=>{
+      const n=parseInt(d.id);
+      const a=apps.find(x=>x.num===n);
+      dataMap[n]=dataMap[n]||{num:n,name:a?.name||d.data().name||'#'+n,clicks:0,favs:0};
+      dataMap[n].clicks=d.data().count||0;
+    });
+    fSnap.docs.forEach(d=>{
+      const n=parseInt(d.id);
+      const a=apps.find(x=>x.num===n);
+      dataMap[n]=dataMap[n]||{num:n,name:a?.name||'#'+n,clicks:0,favs:0};
+      dataMap[n].favs=d.data().count||0;
+    });
+    const rows=Object.values(dataMap)
+      .map(r=>({...r,score:(r.clicks||0)+(r.favs||0)*3}))
+      .sort((a,b)=>b.score-a.score);
+    if(!rows.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#aaa;padding:14px">אין נתונים עדיין</td></tr>';return;}
+    const maxScore=rows[0].score||1;
+    tbody.innerHTML=rows.map((r,i)=>{
+      const pct=Math.round((r.score/maxScore)*100);
+      const badge=r.score>=40?'🔥':r.score>=15?'✦':'';
+      return`<tr>
+        <td class="t-num">${i+1}</td>
+        <td class="t-name">${badge?`<span style="margin-left:4px">${badge}</span>`:''}${esc(r.name)}</td>
+        <td style="text-align:center">${r.clicks||0}</td>
+        <td style="text-align:center">${r.favs||0}</td>
+        <td style="min-width:120px">
+          <div style="background:#f0ebe5;border-radius:4px;height:8px;overflow:hidden">
+            <div style="background:#8b1a1a;width:${pct}%;height:100%;border-radius:4px;transition:width .4s"></div>
+          </div>
+          <span style="font-size:.7rem;color:#8b1a1a;font-weight:700">${r.score}</span>
+        </td>
+      </tr>`;
+    }).join('');
+  }catch(e){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#e11d48;padding:14px">שגיאה בטעינה</td></tr>';}
 }
 function closeAdmin(){document.body.classList.remove('admin-mode');g('adminPanel').classList.remove('open');document.body.style.overflow='';render();}
 function renderAdmTable(){
