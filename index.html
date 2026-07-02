@@ -828,7 +828,7 @@ function renderPopularTags(filteredList){
   const top12=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,12).map(([t])=>t);
   const el=g('popularTagsContainer');
   if(!el)return;
-  el.innerHTML=top12.map(t=>`<button class="sb-tag${activeTag===t?' active':''}" onclick="setActiveTag(${JSON.stringify(t)})">${esc(t)}</button>`).join('');
+  el.innerHTML=top12.map(t=>`<button class="sb-tag${activeTag===t?' active':''}" onclick="setActiveTag(this.dataset.tag)" data-tag="${esc(t)}">${esc(t)}</button>`).join('');
 }
 
 function setActiveTag(tag){
