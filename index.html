@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Sharon Margolin — Portfolio</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -37,9 +40,11 @@ html{scroll-behavior:smooth}
 #filter-sidebar{width:260px;flex-shrink:0;position:sticky;top:80px;max-height:calc(100vh - 100px);overflow-y:auto;border-radius:12px}
 #filter-sidebar::-webkit-scrollbar{width:3px}
 #filter-sidebar::-webkit-scrollbar-thumb{background:#d4ccc4;border-radius:3px}
-.sb-counter{background:#8b1a1a;border-radius:12px 12px 0 0;padding:14px 18px}
-.sb-counter-num{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;color:#fff;line-height:1}
-.sb-counter-label{font-size:.72rem;color:rgba(255,255,255,.65);margin-top:3px}
+.sb-counter{background:#fff;border-radius:12px 12px 0 0;padding:28px 20px 22px;text-align:center;border-bottom:1px solid #ede8e2}
+.sb-counter-num{font-family:'Playfair Display',serif;font-size:7rem;font-weight:900;color:#8b1a1a;line-height:1;letter-spacing:-5px}
+.sb-counter-label{font-size:.78rem;color:#b0a49a;letter-spacing:.5px;margin-top:8px}
+.sb-counter-bar-wrap{margin-top:14px;height:2px;background:#ede8e2;border-radius:2px;overflow:hidden}
+.sb-counter-bar{height:2px;background:#8b1a1a;border-radius:2px;transition:width .4s ease;width:100%}
 .sb-section{background:#fff;padding:14px 18px;border-bottom:1px solid #ede8e2}
 .sb-section:last-child{border-radius:0 0 12px 12px;border-bottom:none}
 .sb-sec-title{font-size:.72rem;font-weight:800;letter-spacing:1.5px;color:#1a1a1a;text-transform:uppercase;border-bottom:1.5px solid #8b1a1a;padding-bottom:8px;margin-bottom:12px}
@@ -73,14 +78,15 @@ html{scroll-behavior:smooth}
 .admin-mode .card-admin-ovl{display:flex}
 /* RTL flex-direction:row → first DOM child appears rightmost */
 /* Order: [num-strip RIGHT] [content CENTER] [actions LEFT] */
-.card-num-strip{width:54px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.card-num-text{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:900;color:#8b1a1a;writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:1px}
+.card-num-strip{width:62px;background:#8b1a1a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0}
+.card-num-text{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px}
+.card-num-hash{font-size:.6rem;color:rgba(255,255,255,.28);letter-spacing:1px;font-weight:700}
 .card-content{flex:1;padding:20px 22px;min-width:0}
 .card-top-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .domain-badge{font-size:.65rem;font-weight:700;color:#8b1a1a;background:#fff5f5;border:1px solid #e0b8b8;border-radius:3px;padding:2px 8px;white-space:nowrap}
-.fav-btn-card{border:none;background:none;font-size:1.1rem;cursor:pointer;padding:0;line-height:1;transition:color .2s;color:#c8c0b4}
+.fav-btn-card{border:none;background:none;font-size:1.55rem;cursor:pointer;padding:0;line-height:1;transition:color .2s,transform .18s ease;color:#c8c0b4}
 .fav-btn-card.on{color:#8b1a1a}
-.fav-btn-card:hover{color:#8b1a1a}
+.fav-btn-card:hover{color:#8b1a1a;transform:scale(1.25)}
 .card-name{font-family:'Playfair Display',serif;font-size:1.22rem;font-weight:800;line-height:1.25;margin-bottom:9px;color:#1a1a1a;text-align:right}
 .card-desc-text{font-size:.81rem;color:#6b6560;line-height:1.7;margin-bottom:11px;text-align:right}
 .card-tags-row{display:flex;flex-wrap:wrap;gap:5px}
@@ -291,7 +297,8 @@ html{scroll-behavior:smooth}
 
     <div class="sb-counter">
       <div class="sb-counter-num" id="appsCount">89</div>
-      <div class="sb-counter-label">יישומים נמצאו</div>
+      <div class="sb-counter-label">אפליקציות לשימושכם</div>
+      <div class="sb-counter-bar-wrap"><div class="sb-counter-bar" id="resultBar"></div></div>
     </div>
 
     <div class="sb-section">
@@ -776,6 +783,7 @@ function render(){
 
   g('appsCount').textContent=list.length;
   const ac2=g('appsCount2');if(ac2)ac2.textContent=list.length;
+  const rb=g('resultBar');if(rb)rb.style.width=Math.round(list.length/Math.max(apps.length,1)*100)+'%';
 
   const totalActive=activeDomains.size+activePlatforms.size+activeQFs.size+(activeTag?1:0)+(q.trim()?1:0);
   const cb=g('clearFiltersBtn');if(cb)cb.style.display=totalActive>0?'inline-block':'none';
@@ -802,6 +810,7 @@ function cardHTML(a,idx){
     </div>
     <div class="card-num-strip">
       <span class="card-num-text">${numStr}</span>
+      <span class="card-num-hash">#</span>
     </div>
     <div class="card-content">
       <div class="card-top-row">
