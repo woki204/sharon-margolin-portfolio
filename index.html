@@ -614,7 +614,8 @@ function matchQF(a,qf){
 let apps=[], favs=new Set(), activeDomains=new Set(), activePlatforms=new Set(), activeQFs=new Set(), activeTag='', sortMode='desc', q='';
 let currentUser=null;
 let _auth=null, _db=null;
-let popularityMap={}; // num -> {clicks, favs, score}
+let popularityMap={}; // num -> {clicks, favs}
+let popularityTiers={}; // num -> 'hot'|'rec'|''
 
 // ── FIREBASE CONFIG ──
 const FB_CONFIG={
@@ -689,6 +690,7 @@ async function loadPopularity(){
       if(!popularityMap[n])popularityMap[n]={clicks:0,favs:0};
       popularityMap[n].favs=d.data().count||0;
     });
+    recomputeTiers();
     render();
   }catch(e){console.warn('loadPopularity error:',e);}
 }
@@ -699,10 +701,26 @@ function getScore(num){
   return (p.clicks||0)+(p.favs||0)*3;
 }
 
+function recomputeTiers(){
+  // Rank all apps with score>0, give badges to top 5% (hot) and next 15% (rec)
+  const scored=Object.keys(popularityMap)
+    .map(n=>({num:parseInt(n),score:getScore(parseInt(n))}))
+    .filter(x=>x.score>0)
+    .sort((a,b)=>b.score-a.score);
+  popularityTiers={};
+  if(!scored.length)return;
+  const hotCut=Math.max(1,Math.ceil(scored.length*0.05));
+  const recCut=Math.max(2,Math.ceil(scored.length*0.20));
+  scored.forEach((x,i)=>{
+    if(i<hotCut)popularityTiers[x.num]='hot';
+    else if(i<hotCut+recCut)popularityTiers[x.num]='rec';
+  });
+}
+
 function getBadge(num){
-  const s=getScore(num);
-  if(s>=40)return'<span class="pop-badge hot">🔥 פופולרי</span>';
-  if(s>=15)return'<span class="pop-badge rec">✦ מומלץ</span>';
+  const t=popularityTiers[num];
+  if(t==='hot')return'<span class="pop-badge hot">🔥 פופולרי</span>';
+  if(t==='rec')return'<span class="pop-badge rec">✦ מומלץ</span>';
   return'';
 }
 
@@ -867,9 +885,10 @@ function openApp(link,num){
     {count:firebase.firestore.FieldValue.increment(1),name:app?.name||'',num},
     {merge:true}
   ).catch(()=>{});
-  // update local map immediately so badge can appear in same session
+  // update local map immediately so badge updates in same session
   if(!popularityMap[num])popularityMap[num]={clicks:0,favs:0};
   popularityMap[num].clicks=(popularityMap[num].clicks||0)+1;
+  recomputeTiers();
 }
 
 // ── FAVORITES ──
@@ -887,6 +906,7 @@ function toggleFav(num,e){
     ).catch(()=>{});
     if(!popularityMap[num])popularityMap[num]={clicks:0,favs:0};
     popularityMap[num].favs=Math.max(0,(popularityMap[num].favs||0)+inc);
+    recomputeTiers();
   }
   render();
   toast(added?'♥ נוסף למועדפים':'♡ הוסר ממועדפים');
