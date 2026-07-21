@@ -784,7 +784,7 @@ function render(){
   });
 
   if(sortMode==='alpha')list.sort((a,b)=>(a.name||'').localeCompare(b.name||'','he'));
-  else list.sort((a,b)=>b.num-a.num);
+  else list.sort((a,b)=>a.num-b.num);
 
   g('appsCount').textContent=list.length;
   const ac2=g('appsCount2');if(ac2)ac2.textContent=list.length;
