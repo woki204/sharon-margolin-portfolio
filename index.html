@@ -648,17 +648,22 @@ const FB_CONFIG={
   // Load popularity data (clicks + favCounts)
   loadPopularity();
 
-  // Load apps from Firestore (overwrites local seed if data exists)
-  _db.collection('apps').orderBy('num').get().then(snap=>{
-    if(snap.empty){
-      // First time: seed from INITIAL_APPS
-      _saveAllAppsToFirestore();
-    } else {
-      apps=snap.docs.map(d=>d.data());
-      apps.sort((a,b)=>a.num-b.num);
-      updateSidebarCounts();
-      render();
-    }
+  // Load Firestore overrides and merge into local INITIAL_APPS
+  // INITIAL_APPS is always the base; Firestore stores only admin edits/adds/deletes
+  _db.collection('apps').get().then(snap=>{
+    if(snap.empty)return; // no admin changes yet — INITIAL_APPS is correct
+    snap.docs.forEach(d=>{
+      const data=d.data();
+      if(data._deleted){
+        apps=apps.filter(a=>a.num!==data.num);
+      } else {
+        const idx=apps.findIndex(a=>a.num===data.num);
+        if(idx>=0)apps[idx]=data; else apps.push(data);
+      }
+    });
+    apps.sort((a,b)=>a.num-b.num);
+    updateSidebarCounts();
+    render();
   }).catch(e=>console.warn('Firestore apps load error:',e));
 
   // Auth state listener — fires when login/logout changes
@@ -1013,14 +1018,22 @@ async function saveApp(){
   const idx=apps.findIndex(a=>a.num===num);
   if(idx>=0)apps[idx]=app;else apps.push(app);
   apps.sort((a,b)=>a.num-b.num);
-  if(_db){try{await _db.collection('apps').doc(String(num)).set(app);}catch(e){console.warn(e);}}
+  if(_db){
+    try{await _db.collection('apps').doc(String(num)).set(app);}
+    catch(e){toast('⚠️ שגיאה בשמירה ב-Firebase: '+e.message);return;}
+  }
   closeEdit();renderAdmTable();toast('✅ נשמר בהצלחה');render();
 }
 async function delApp(num){
   const a=apps.find(x=>x.num===num);
   if(!confirm(`למחוק את יישום #${num} — "${a?.name}"?`))return;
   apps=apps.filter(x=>x.num!==num);
-  if(_db){try{await _db.collection('apps').doc(String(num)).delete();}catch(e){console.warn(e);}}
+  if(_db){
+    try{
+      // mark as deleted so it stays hidden after page refresh (INITIAL_APPS won't restore it)
+      await _db.collection('apps').doc(String(num)).set({num,_deleted:true});
+    }catch(e){toast('⚠️ שגיאה בשמירה ב-Firebase: '+e.message);return;}
+  }
   renderAdmTable();toast('🗑️ נמחק');render();
 }
 
