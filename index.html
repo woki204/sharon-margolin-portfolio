@@ -637,7 +637,7 @@ const FB_CONFIG={
 
 (function init(){
   // Show apps immediately from INITIAL_APPS while Firestore loads
-  apps=INITIAL_APPS.map(a=>({...a,domain:DOMAIN_MAP[a.num]||''}));
+  apps=INITIAL_APPS.map(a=>({...a,num:90-a.num,domain:DOMAIN_MAP[a.num]||''}));
   updateSidebarCounts();
   render();
 
@@ -1033,7 +1033,7 @@ async function resetFirestoreApps(){
     const batch=_db.batch();
     snap.docs.forEach(d=>batch.delete(d.ref));
     await batch.commit();
-    apps=INITIAL_APPS.map(a=>({...a,domain:DOMAIN_MAP[a.num]||''}));
+    apps=INITIAL_APPS.map(a=>({...a,num:90-a.num,domain:DOMAIN_MAP[a.num]||''}));
     apps.sort((a,b)=>a.num-b.num);
     updateSidebarCounts();renderAdmTable();render();
     toast('✅ Firebase אופס — מוצגת הרשימה המקורית');
