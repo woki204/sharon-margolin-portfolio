@@ -459,6 +459,7 @@ html{scroll-behavior:smooth}
 
     <div class="adm-sec">
       <h3>כל היישומים <span id="admCount" style="color:#8b1a1a;font-family:'Playfair Display',serif"></span></h3>
+      <button onclick="resetFirestoreApps()" style="margin-bottom:14px;padding:8px 18px;background:#8b1a1a;color:#fff;border:none;border-radius:8px;font-family:'Heebo',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;">⚠️ איפוס Firebase — חזרה ל-INITIAL_APPS</button>
       <input type="text" id="admSearch" placeholder="חיפוש מהיר..." oninput="renderAdmTable()"
         style="width:220px;padding:8px 12px;border:1.5px solid #e5e7eb;font-family:'Heebo',sans-serif;font-size:.85rem;outline:none;background:#fafaf8;margin-bottom:14px">
       <div style="overflow-x:auto">
@@ -1023,6 +1024,20 @@ async function saveApp(){
     catch(e){toast('⚠️ שגיאה בשמירה ב-Firebase: '+e.message);return;}
   }
   closeEdit();renderAdmTable();toast('✅ נשמר בהצלחה');render();
+}
+async function resetFirestoreApps(){
+  if(!confirm('⚠️ פעולה זו תמחק את כל נתוני האפליקציות מ-Firebase ותחזיר לרשימה המקורית.\nהאם להמשיך?'))return;
+  if(!_db){toast('⚠️ Firebase לא מחובר');return;}
+  try{
+    const snap=await _db.collection('apps').get();
+    const batch=_db.batch();
+    snap.docs.forEach(d=>batch.delete(d.ref));
+    await batch.commit();
+    apps=INITIAL_APPS.map(a=>({...a,domain:DOMAIN_MAP[a.num]||''}));
+    apps.sort((a,b)=>a.num-b.num);
+    updateSidebarCounts();renderAdmTable();render();
+    toast('✅ Firebase אופס — מוצגת הרשימה המקורית');
+  }catch(e){toast('❌ שגיאה: '+e.message);}
 }
 async function delApp(num){
   const a=apps.find(x=>x.num===num);
