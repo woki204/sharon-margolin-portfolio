@@ -804,7 +804,7 @@ function render(){
 function cardHTML(a,idx){
   const isFav=favs.has(a.num);
   const domain=a.domain||DOMAIN_MAP[a.num]||'';
-  const numStr=String(idx+1).padStart(2,'0');
+  const numStr=String(a.num).padStart(2,'0');
   const tags=(a.tags||[]).filter(Boolean);
   const rawDesc=a.desc||'';
   const desc=rawDesc.length>140?rawDesc.slice(0,140)+'…':rawDesc;
