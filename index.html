@@ -1041,15 +1041,22 @@ async function resetFirestoreApps(){
 }
 async function delApp(num){
   const a=apps.find(x=>x.num===num);
-  if(!confirm(`למחוק את יישום #${num} — "${a?.name}"?`))return;
+  const inInitial=INITIAL_APPS.some(x=>(90-x.num)===num);
+  const msg=inInitial
+    ?`לבטל את העריכה של #${num} — "${a?.name}" ולשחזר את המקורי?`
+    :`למחוק לצמיתות את יישום #${num} — "${a?.name}"?`;
+  if(!confirm(msg))return;
   apps=apps.filter(x=>x.num!==num);
   if(_db){
     try{
-      // mark as deleted so it stays hidden after page refresh (INITIAL_APPS won't restore it)
-      await _db.collection('apps').doc(String(num)).set({num,_deleted:true});
-    }catch(e){toast('⚠️ שגיאה בשמירה ב-Firebase: '+e.message);return;}
+      if(inInitial){
+        await _db.collection('apps').doc(String(num)).delete();
+      } else {
+        await _db.collection('apps').doc(String(num)).set({num,_deleted:true});
+      }
+    }catch(e){toast('⚠️ שגיאה ב-Firebase: '+e.message);return;}
   }
-  renderAdmTable();toast('🗑️ נמחק');render();
+  renderAdmTable();toast(inInitial?'↩️ שוחזר לברירת מחדל':'🗑️ נמחק');render();
 }
 
 // ── EXCEL IMPORT ──
