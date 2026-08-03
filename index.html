@@ -810,8 +810,7 @@ function cardHTML(a,idx){
   const domain=a.domain||DOMAIN_MAP[a.num]||'';
   const numStr=String(a.num).padStart(2,'0');
   const tags=(a.tags||[]).filter(Boolean);
-  const rawDesc=a.desc||'';
-  const desc=rawDesc.length>140?rawDesc.slice(0,140)+'…':rawDesc;
+  const desc=a.desc||'';
   return `<div class="app-card">
     <div class="card-admin-ovl">
       <button class="abtn abtn-e" onclick="openEdit(${a.num})">ערוך</button>
