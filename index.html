@@ -260,20 +260,6 @@ html{scroll-behavior:smooth}
 </head>
 <body>
 
-<!-- ── PASSWORD OVERLAY ── -->
-<div id="pwOverlay">
-  <div class="pw-box">
-    <h3>🔐 כניסת מנהל</h3>
-    <p>הכנס את סיסמת המנהל</p>
-    <input type="password" id="pwInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkPw()">
-    <div id="pwErr"></div>
-    <div class="pw-btns">
-      <button class="pw-cancel" onclick="closePw()">ביטול</button>
-      <button class="pw-enter" onclick="checkPw()">כניסה</button>
-    </div>
-  </div>
-</div>
-
 <!-- ── HEADER ── -->
 <header id="site-header">
   <div class="hdr-logo">SHARON MARGOLIN</div>
@@ -285,7 +271,7 @@ html{scroll-behavior:smooth}
   </div>
   <div class="hdr-auth" id="hdrAuth"></div>
   <button class="hdr-mobile-filter" onclick="toggleMobileSidebar()">⚙ סינון</button>
-  <button class="hdr-admin" onclick="openGear()">⚙ מנהל</button>
+  <button class="hdr-admin" id="adminBtn" onclick="requestAdminAccess()" hidden>⚙ מנהל</button>
 </header>
 
 <!-- ── MAIN WRAP ── -->
@@ -500,8 +486,6 @@ html{scroll-behavior:smooth}
 
 <!-- ══════════════════ SCRIPT ══════════════════ -->
 <script>
-const ADMIN_PW = "049909321";
-
 const INITIAL_APPS = [
 {num:1,name:"מצלמת עשורים",link:"https://gemini.google.com/share/f1bedd035732",yt:"",desc:"פתחו את הקישור בטלפון שלכם, אשרו גישה למצלמה. קבעו עם הגלגל את העשור אליו אתם רוצים לנסוע בזמן, קבעו את העשור. צלמו תמונה, בחרו האם עם טקסט או ללא טקסט ואם בחרתם עם טקסט האם אתם רוצים להקליד אותו ידנית או שהאפליקציה תמציא לכם את הטקסט. האפליקציה תמיר את הצילום לעשור המתאים ותוכלו להוריד את התמונה לטלפון שלכם",tags:["צילום","עריכת תמונות","טיים-טראוול","Gemini","פילטרים"],domains:[]},
 {num:2,name:"YoutubeLesson — להפוך סרטון יוטיוב לשיעור",link:"https://ai.studio/apps/ceaf1b23-210f-42b2-9e0c-8356b8a69c3a?fullscreenApplet=true",yt:"https://youtu.be/wtoOiINgbcU",desc:"בסביבה זו תוכלו להעלות סרטון מיוטיוב, להוסיף עליו עצירות לאורך ציר הזמן, לכל עצירה תוכלו לשייך: 1. מידע טקסטואלי 2. שאלות פתוחות / רב ברירה / תיבות סימון 3. אתרי אינטרנט 4. קבצים מהדרייב שלכם. לבסוף הורידו את התוצר כקובץ HTML, שלחו לתלמידים את הקובץ והם יוכלו לעבוד בסביבה שיצרתם עבורם",tags:["יוטיוב","ציר זמן","שיעורים","HTML","AI Studio"],domains:[]},
@@ -625,6 +609,7 @@ function matchQF(a,qf){
 // ── STATE ──
 let apps=[], favs=new Set(), activeDomains=new Set(), activePlatforms=new Set(), activeQFs=new Set(), activeTag='', sortMode='desc', q='';
 let currentUser=null;
+let isAdmin=false;
 let _auth=null, _db=null;
 let popularityMap={}; // num -> {clicks, favs}
 let popularityTiers={}; // num -> 'hot'|'rec'|''
@@ -673,17 +658,24 @@ const FB_CONFIG={
 
   // Auth state listener — fires when login/logout changes
   _auth.onAuthStateChanged(async fbUser=>{
+    currentUser=fbUser||null;
+    isAdmin=false;
+    closeAdmin();
     if(fbUser){
-      currentUser=fbUser;
       try{
         const doc=await _db.collection('users').doc(fbUser.uid).get();
         favs=new Set(doc.exists?(doc.data().favs||[]):[]);
       }catch(e){favs=new Set();}
+      // Firestore rules are the source of truth. This probe succeeds only for an admin.
+      try{
+        await _db.collection('adminAccess').doc('status').get();
+        isAdmin=true;
+      }catch(e){isAdmin=false;}
     } else {
-      currentUser=null;
       const sf=localStorage.getItem('pm_favs');
       favs=new Set(sf?JSON.parse(sf):[]);
     }
+    updateAdminAccessUI();
     updateSidebarCounts();
     render();
   });
@@ -931,17 +923,26 @@ function toggleFav(num,e){
 }
 
 // ── ADMIN ACCESS ──
-function openGear(){g('pwInput').value='';g('pwErr').textContent='';g('pwOverlay').classList.add('open');setTimeout(()=>g('pwInput').focus(),100);}
-function closePw(){g('pwOverlay').classList.remove('open');}
-function checkPw(){
-  if(g('pwInput').value===ADMIN_PW){closePw();openAdmin();}
-  else{g('pwErr').textContent='❌ סיסמה שגויה';g('pwInput').value='';g('pwInput').focus();}
+function updateAdminAccessUI(){
+  const btn=g('adminBtn');if(!btn)return;
+  btn.hidden=!currentUser;
+  btn.textContent=isAdmin?'⚙ מנהל':'🔒 מנהל';
+  btn.title=isAdmin?'פתיחת מערכת הניהול':'החשבון הנוכחי אינו מורשה לניהול';
+}
+function requestAdminAccess(){
+  if(!currentUser){openLogin();return;}
+  if(!isAdmin){toast('🔒 החשבון הנוכחי אינו מורשה לניהול');return;}
+  openAdmin();
 }
 
 // ── ADMIN ──
-function openAdmin(){document.body.classList.add('admin-mode');renderAdmTable();renderUsersTable();renderClicksTable();g('adminPanel').classList.add('open');document.body.style.overflow='hidden';}
+function requireAdmin(){
+  if(isAdmin&&currentUser)return true;
+  closeAdmin();toast('🔒 נדרשת הרשאת מנהל');return false;
+}
+function openAdmin(){if(!requireAdmin())return;document.body.classList.add('admin-mode');renderAdmTable();renderUsersTable();renderClicksTable();g('adminPanel').classList.add('open');document.body.style.overflow='hidden';}
 
-async function renderClicksTable(){
+async function renderClicksTable(){if(!requireAdmin())return;
   const tbody=g('clicksBody');if(!tbody)return;
   if(!_db){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#aaa;padding:14px">מחבר...</td></tr>';return;}
   try{
@@ -986,7 +987,7 @@ async function renderClicksTable(){
   }catch(e){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#e11d48;padding:14px">שגיאה בטעינה</td></tr>';}
 }
 function closeAdmin(){document.body.classList.remove('admin-mode');g('adminPanel').classList.remove('open');document.body.style.overflow='';render();}
-function renderAdmTable(){
+function renderAdmTable(){if(!requireAdmin())return;
   const sq=(g('admSearch').value||'').toLowerCase();
   const list=apps.filter(a=>!sq||String(a.num).includes(sq)||(a.name||'').toLowerCase().includes(sq)).sort((a,b)=>a.num-b.num);
   g('admCount').textContent=apps.length;
@@ -1000,8 +1001,8 @@ function renderAdmTable(){
 }
 
 // ── EDIT ──
-function openAddNew(){clearForm();g('editTitle').innerHTML='יישום חדש <button class="mclose" onclick="closeEdit()">✕</button>';g('editOverlay').classList.add('open');}
-function openEdit(num){
+function openAddNew(){if(!requireAdmin())return;clearForm();g('editTitle').innerHTML='יישום חדש <button class="mclose" onclick="closeEdit()">✕</button>';g('editOverlay').classList.add('open');}
+function openEdit(num){if(!requireAdmin())return;
   const a=apps.find(x=>x.num===num);if(!a)return;
   clearForm();
   g('eId').value=num;g('eNum').value=a.num;g('eName').value=a.name||'';
@@ -1012,7 +1013,7 @@ function openEdit(num){
 }
 function closeEdit(){g('editOverlay').classList.remove('open');}
 function clearForm(){['eId','eNum','eName','eDesc','eLink','eYt','eTags','eDoms'].forEach(id=>g(id).value='');}
-async function saveApp(){
+async function saveApp(){if(!requireAdmin())return;
   const num=parseInt(g('eNum').value),name=g('eName').value.trim(),link=g('eLink').value.trim();
   if(!num||!name||!link){toast('⚠️ מספר, שם וקישור הם שדות חובה');return;}
   const app={num,name,link,yt:g('eYt').value.trim(),desc:g('eDesc').value.trim(),
@@ -1028,7 +1029,7 @@ async function saveApp(){
   }
   closeEdit();renderAdmTable();toast('✅ נשמר בהצלחה');render();
 }
-async function resetFirestoreApps(){
+async function resetFirestoreApps(){if(!requireAdmin())return;
   if(!confirm('⚠️ פעולה זו תמחק את כל נתוני האפליקציות מ-Firebase ותחזיר לרשימה המקורית.\nהאם להמשיך?'))return;
   if(!_db){toast('⚠️ Firebase לא מחובר');return;}
   try{
@@ -1042,7 +1043,7 @@ async function resetFirestoreApps(){
     toast('✅ Firebase אופס — מוצגת הרשימה המקורית');
   }catch(e){toast('❌ שגיאה: '+e.message);}
 }
-async function delApp(num){
+async function delApp(num){if(!requireAdmin())return;
   const a=apps.find(x=>x.num===num);
   const inInitial=INITIAL_APPS.some(x=>(90-x.num)===num);
   const msg=inInitial
@@ -1063,7 +1064,7 @@ async function delApp(num){
 }
 
 // ── EXCEL IMPORT ──
-async function importExcel(input){
+async function importExcel(input){if(!requireAdmin())return;
   const file=input.files[0];if(!file)return;
   const msg=g('importMsg');msg.className='import-msg';msg.textContent='מייבא...';
   try{
@@ -1177,7 +1178,7 @@ async function doForgot(){
 }
 
 // ── ADMIN USERS TABLE ──
-async function renderUsersTable(){
+async function renderUsersTable(){if(!requireAdmin())return;
   const uc=g('usersCount');
   const tbody=g('usersBody');if(!tbody)return;
   if(!_db){tbody.innerHTML='<tr><td colspan="3" style="text-align:center;color:#aaa;padding:20px">מחבר...</td></tr>';return;}
@@ -1201,7 +1202,7 @@ async function renderUsersTable(){
 
 // ── KEYBOARD ──
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeVideo();closeEdit();closePw();closeRegister();closeLogin();closeForgot();}
+  if(e.key==='Escape'){closeVideo();closeEdit();closeRegister();closeLogin();closeForgot();}
 });
 
 // ── UTILS ──
@@ -1212,3 +1213,4 @@ function toast(msg){const t=g('toast');t.textContent=msg;t.classList.add('show')
 </script>
 </body>
 </html>
+
