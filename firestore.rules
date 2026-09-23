@@ -1,6 +1,16 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ═══════════════════════════════════════════════════════════
+    // כללים מאוחדים לפרויקט eduai-planner-1b6ac
+    // הפרויקט משרת שלושה אתרים:
+    //   1. portfolio        → apps, users, clicks, favCounts, adminAccess
+    //   2. learning-lab     → ll_meta, ll_users, ll_media, ll_courses
+    //   3. milano-countdown → milano
+    // ═══════════════════════════════════════════════════════════
+
+    // ── עזר: פורטפוליו ──────────────────────────────────────────
     function signedIn() {
       return request.auth != null;
     }
@@ -16,6 +26,19 @@ service cloud.firestore {
         && request.resource.data.count is int
         && request.resource.data.count >= 0;
     }
+
+    // ── עזר: מעבדת למידה ────────────────────────────────────────
+    function llSignedIn() {
+      return request.auth != null;
+    }
+
+    function llIsAdmin() {
+      return llSignedIn()
+        && exists(/databases/$(database)/documents/ll_users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/ll_users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // ═══════════════ 1. פורטפוליו ═══════════════
 
     match /adminAccess/{document=**} {
       allow read: if isAdmin();
@@ -60,6 +83,58 @@ service cloud.firestore {
         );
       allow delete: if isAdmin();
     }
+
+    // ═══════════════ 2. מעבדת למידה ═══════════════
+
+    match /ll_meta/{docId} {
+      allow read: if true;
+      // ניתן ליצור פעם אחת בלבד — קיום המסמך נועל את עמוד ההקמה לתמיד.
+      allow create: if llSignedIn()
+        && !exists(/databases/$(database)/documents/ll_meta/bootstrap);
+      allow update, delete: if false;
+    }
+
+    match /ll_users/{uid} {
+      allow read: if llSignedIn() && (request.auth.uid == uid || llIsAdmin());
+      allow delete: if llIsAdmin();
+      allow create: if llIsAdmin()
+        || (llSignedIn()
+            && request.auth.uid == uid
+            && request.resource.data.role == 'admin'
+            && !exists(/databases/$(database)/documents/ll_meta/bootstrap));
+      allow update: if llIsAdmin()
+        || (request.auth.uid == uid
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['mustChangePassword', 'passwordChangedAt', 'displayName']));
+    }
+
+    match /ll_media/{mediaId} {
+      allow read: if true;
+      allow create: if llSignedIn() && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if llSignedIn()
+        && (resource.data.ownerUid == request.auth.uid || llIsAdmin());
+    }
+
+    match /ll_courses/{courseId} {
+      allow read: if resource.data.published == true
+        || (llSignedIn() && (resource.data.ownerUid == request.auth.uid || llIsAdmin()));
+      allow create: if llSignedIn()
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if llSignedIn()
+        && (resource.data.ownerUid == request.auth.uid || llIsAdmin());
+    }
+
+    // ═══════════════ 3. milano-countdown ═══════════════
+    // ⚠️ האתר כותב ללא הזדהות (increment / arrayUnion) ואין בו מסך כניסה.
+    // הכללים כאן משמרים את ההתנהגות הקיימת בדיוק, מוגבלים לקולקציה אחת.
+    // זה משטח פתוח שבדיקה חיצונית תסמן — ראה הערה בדיווח.
+
+    match /milano/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // ═══════════════ ברירת מחדל: חסום ═══════════════
 
     match /{document=**} {
       allow read, write: if false;
